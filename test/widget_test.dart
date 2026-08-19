@@ -58,12 +58,11 @@ void main() {
     );
 
     // Initial frame check
-    expect(find.text('ॐ'), findsOneWidget);
-    expect(find.text('॥ श्रीमद्भगवद्गीता ॥'), findsOneWidget);
+    expect(find.text('॥ सनातन दृष्टि ॥'), findsOneWidget);
     expect(find.text('॥ ॐ नमो भगवते वासुदेवाय ॥'), findsOneWidget);
     expect(find.text('॥ यतो धर्मस्ततो जयः ॥'), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('SHREEMAD BHAGAVAD GITA'), findsOneWidget);
+    expect(find.text('पञ्चाङ्ग  •  गीता  •  कुण्डली  •  राशि'), findsOneWidget);
   });
 }

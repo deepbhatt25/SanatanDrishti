@@ -1,6 +1,12 @@
 import '../providers/language_provider.dart';
 
 class AppStrings {
+  // App Branding
+  static const String appName = 'SanatanDrishti';
+  static String appTitle(AppLanguage lang) => lang == AppLanguage.gujarati ? 'સનાતન દૃષ્ટિ' : 'सनातन दृष्टि';
+  static String appTagline(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'પંચાંગ • ગીતા • કુંડળી • રાશિ' : 'पञ्चाङ्ग • गीता • कुण्डली • राशि';
+
   // Navigation
   static String navPanchang(AppLanguage lang) => lang == AppLanguage.gujarati ? 'પંચાંગ' : 'पञ्चाङ्ग';
   static const String navPanchangEnglish = 'Panchang';

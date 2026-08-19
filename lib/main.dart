@@ -117,7 +117,7 @@ class BhagvatGeetaApp extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
-      title: '॥ श्रीमद्भगवद्गीता ॥ • पञ्चाङ्ग • राशि',
+      title: 'SanatanDrishti • सनातन दृष्टि',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),

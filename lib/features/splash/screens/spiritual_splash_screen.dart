@@ -122,7 +122,7 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
                       ),
                     ),
 
-                    // Center Animated Sacred Mandala & Om Emblem
+                    // Center Animated Sacred SanatanDrishti Logo & Title
                     Transform.scale(
                       scale: _scaleAnimation.value,
                       child: Opacity(
@@ -130,103 +130,56 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Glowing Outer Ring
+                            // Glowing SanatanDrishti Master Logo
                             Container(
-                              width: 146,
-                              height: 146,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    AppColors.gold.withAlpha(60),
-                                    AppColors.saffronPrimary.withAlpha(25),
-                                    Colors.transparent,
-                                  ],
-                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.saffronPrimary.withAlpha((110 * _glowAnimation.value).toInt()),
-                                    blurRadius: 40 * _glowAnimation.value,
-                                    spreadRadius: 10 * _glowAnimation.value,
+                                    color: AppColors.saffronPrimary.withAlpha((90 * _glowAnimation.value).toInt()),
+                                    blurRadius: 45 * _glowAnimation.value,
+                                    spreadRadius: 8 * _glowAnimation.value,
                                   ),
                                   BoxShadow(
-                                    color: AppColors.gold.withAlpha((90 * _glowAnimation.value).toInt()),
-                                    blurRadius: 24 * _glowAnimation.value,
+                                    color: AppColors.gold.withAlpha((70 * _glowAnimation.value).toInt()),
+                                    blurRadius: 28 * _glowAnimation.value,
                                   ),
                                 ],
                               ),
-                              child: Center(
-                                child: Container(
-                                  width: 114,
-                                  height: 114,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Color(0xFFA62B2C),
-                                        Color(0xFF5A0C0E),
-                                      ],
-                                    ),
-                                    border: Border.all(
-                                      color: AppColors.goldLight,
-                                      width: 2.5,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'ॐ',
-                                      style: GoogleFonts.notoSerifDevanagari(
-                                        fontSize: 60,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.goldLight,
-                                        shadows: [
-                                          Shadow(
-                                            color: AppColors.gold,
-                                            blurRadius: 18,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 220,
+                                  maxWidth: 280,
+                                ),
+                                child: Image.asset(
+                                  'assets/images/sanatandrishti_logo.png',
+                                  fit: BoxFit.contain,
+                                  filterQuality: FilterQuality.high,
+                                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                                 ),
                               ),
                             ),
 
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 20),
 
                             // Main Sacred App Title in Sanskrit
                             Text(
-                              '॥ श्रीमद्भगवद्गीता ॥',
+                              '॥ सनातन दृष्टि ॥',
                               style: GoogleFonts.notoSerifDevanagari(
-                                fontSize: 30,
+                                fontSize: 28,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                                 letterSpacing: 1.4,
                                 shadows: [
                                   Shadow(
-                                    color: AppColors.gold.withAlpha(160),
-                                    blurRadius: 14,
+                                    color: AppColors.gold.withAlpha(180),
+                                    blurRadius: 16,
                                   ),
                                 ],
                               ),
                             ),
 
-                            const SizedBox(height: 6),
-
-                            // English & IAST Subtitle
-                            Text(
-                              'SHREEMAD BHAGAVAD GITA',
-                              style: GoogleFonts.cinzel(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.goldLight,
-                                letterSpacing: 3.5,
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
 
                             // Feature Badges
                             Container(
@@ -240,7 +193,7 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
                                 ),
                               ),
                               child: Text(
-                                'पञ्चाङ्ग  •  गीता ज्ञान  •  राशि भविष्य',
+                                'पञ्चाङ्ग  •  गीता  •  कुण्डली  •  राशि',
                                 style: GoogleFonts.notoSerifDevanagari(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
