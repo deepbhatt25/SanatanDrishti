@@ -6,7 +6,11 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/rashi_data.dart';
 import '../../../core/providers/language_provider.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import '../../../core/widgets/rashi_symbol_widget.dart';
 import '../../geeta/providers/geeta_provider.dart';
+import '../../kundali/providers/kundali_provider.dart';
+import '../../kundali/screens/create_kundali_screen.dart';
+import '../../kundali/screens/saved_kundalis_screen.dart';
 import '../../rashi/providers/rashi_provider.dart';
 import '../providers/theme_provider.dart';
 
@@ -18,10 +22,12 @@ class SettingsScreen extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final geetaProvider = context.watch<GeetaProvider>();
     final rashiProvider = context.watch<RashiProvider>();
+    final kundaliProvider = context.watch<KundaliProvider>();
     final langProvider = context.watch<LanguageProvider>();
     final currentLang = langProvider.currentLanguage;
     final isGujarati = langProvider.isGujarati;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
 
     return Scaffold(
       appBar: CustomSpiritualAppBar(
@@ -262,7 +268,7 @@ class SettingsScreen extends StatelessWidget {
                     value: r.id,
                     child: Row(
                       children: [
-                        Text(r.symbol, style: const TextStyle(fontSize: 18)),
+                        RashiSymbolWidget(rashi: r, size: 24),
                         const SizedBox(width: 10),
                         Text(
                           isGujarati
@@ -288,6 +294,95 @@ class SettingsScreen extends StatelessWidget {
                   }
                 },
               ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Section: Janam Kundali Management
+          _buildSectionHeader(
+            isGujarati ? 'કુંડળી સંચાલન (Janam Kundali)' : 'कुंडली प्रबंधन (Janam Kundali)',
+            isDark,
+            isGujarati,
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+              ),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.folder_shared_rounded, color: AppColors.saffronPrimary),
+                  title: Text(
+                    AppStrings.savedKundalis(currentLang),
+                    style: isGujarati
+                        ? GoogleFonts.notoSerifGujarati(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          )
+                        : GoogleFonts.notoSerifDevanagari(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                  ),
+                  subtitle: Text(
+                    isGujarati
+                        ? '${kundaliProvider.savedKundalis.length} કુંડળીઓ સંગ્રહિત છે'
+                        : '${kundaliProvider.savedKundalis.length} कुंडलियां संग्रहित हैं',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SavedKundalisScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.auto_awesome_rounded, color: AppColors.gold),
+                  title: Text(
+                    AppStrings.createKundali(currentLang),
+                    style: isGujarati
+                        ? GoogleFonts.notoSerifGujarati(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          )
+                        : GoogleFonts.notoSerifDevanagari(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                  ),
+                  subtitle: Text(
+                    isGujarati
+                        ? 'નવી જન્મ પત્રિકા બનાવો'
+                        : 'नई जन्म पत्रिका बनाएं',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.add_circle_outline_rounded, size: 20, color: AppColors.saffronPrimary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreateKundaliScreen()),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
 

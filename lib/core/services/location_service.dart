@@ -434,6 +434,217 @@ class LocationService {
       isSacred: true,
     ),
 
+    CityLocation(
+      name: 'Mahuva (Bhavnagar)',
+      nameHindi: 'महुआ (भावनगर)',
+      nameGujarati: 'મહુવા (ભાવનગર)',
+      latitude: 21.0914,
+      longitude: 71.7618,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Mahuva (Surat)',
+      nameHindi: 'महुआ (सूरत)',
+      nameGujarati: 'મહુવા (સુરત)',
+      latitude: 21.0185,
+      longitude: 73.1504,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Anand (Vidyanagar)',
+      nameHindi: 'आनंद (विद्यानगर)',
+      nameGujarati: 'આણંદ (વિદ્યાનગર)',
+      latitude: 22.5645,
+      longitude: 72.9289,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Navsari',
+      nameHindi: 'नवसारी',
+      nameGujarati: 'નવસારી',
+      latitude: 20.9467,
+      longitude: 72.9520,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Morbi',
+      nameHindi: 'मोरबी',
+      nameGujarati: 'મોરબી',
+      latitude: 22.8120,
+      longitude: 70.8384,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Nadiad (Santram)',
+      nameHindi: 'नडियाद (संतराम)',
+      nameGujarati: 'નડિયાદ (સંતરામ મંદિર)',
+      latitude: 22.6916,
+      longitude: 72.8634,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Surendranagar',
+      nameHindi: 'सुरेंद्रनगर',
+      nameGujarati: 'સુરેન્દ્રનગર',
+      latitude: 22.7284,
+      longitude: 71.6371,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Bharuch',
+      nameHindi: 'भरूच (भृगु तीर्थ)',
+      nameGujarati: 'ભરૂચ (ભૃગુ તીર્થ)',
+      latitude: 21.7051,
+      longitude: 72.9959,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Mehsana',
+      nameHindi: 'मेहसाणा',
+      nameGujarati: 'મહેસાણા',
+      latitude: 23.5880,
+      longitude: 72.3693,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Bhuj (Kutch)',
+      nameHindi: 'भुज (कच्छ)',
+      nameGujarati: 'ભુજ (કચ્છ)',
+      latitude: 23.2420,
+      longitude: 69.6669,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Porbandar',
+      nameHindi: 'पोरबंदर (सुदामापुरी)',
+      nameGujarati: 'પોરબંદર (સુદામાપુરી)',
+      latitude: 21.6417,
+      longitude: 69.6293,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Palanpur',
+      nameHindi: 'पालनपुर',
+      nameGujarati: 'પાલનપુર',
+      latitude: 24.1724,
+      longitude: 72.4346,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Valsad',
+      nameHindi: 'वलसाड',
+      nameGujarati: 'વલસાડ',
+      latitude: 20.5992,
+      longitude: 72.9342,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Vapi',
+      nameHindi: 'वापी',
+      nameGujarati: 'વાપી',
+      latitude: 20.3893,
+      longitude: 72.9106,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Gondal',
+      nameHindi: 'गोंडल (अक्षर मंदिर)',
+      nameGujarati: 'ગોંડલ (અક્ષર મંદિર)',
+      latitude: 21.9619,
+      longitude: 70.7923,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Veraval (Patan)',
+      nameHindi: 'वेरावल (प्रभास)',
+      nameGujarati: 'વેરાવળ (પ્રભાસ)',
+      latitude: 20.9077,
+      longitude: 70.3678,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Godhra',
+      nameHindi: 'गोधरा',
+      nameGujarati: 'ગોધરા',
+      latitude: 22.7758,
+      longitude: 73.6149,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Patan',
+      nameHindi: 'पाटन',
+      nameGujarati: 'પાટણ',
+      latitude: 23.8493,
+      longitude: 72.1266,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Dahod',
+      nameHindi: 'दाहोद',
+      nameGujarati: 'દાહોદ',
+      latitude: 22.8340,
+      longitude: 74.2550,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Botad (Salangpur)',
+      nameHindi: 'बोटाद (कष्टभंजन देव)',
+      nameGujarati: 'બોટાદ (સાળંગપુર હનુમાનજી)',
+      latitude: 22.1706,
+      longitude: 71.6669,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Amreli',
+      nameHindi: 'अमरेली',
+      nameGujarati: 'અમરેલી',
+      latitude: 21.6032,
+      longitude: 71.2223,
+      timezone: 5.5,
+    ),
+    CityLocation(
+      name: 'Palitana (Shatrunjaya)',
+      nameHindi: 'पालीताना (शत्रुंजय तीर्थ)',
+      nameGujarati: 'પાલીતાણા (શત્રુંજય તીર્થ)',
+      latitude: 21.5222,
+      longitude: 71.8267,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Dakor',
+      nameHindi: 'डाकोर (रणछोड़राय)',
+      nameGujarati: 'ડાકોર (રણછોડરાય)',
+      latitude: 22.7564,
+      longitude: 73.1481,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Ambaji',
+      nameHindi: 'अंबाजी (शक्तिपीठ)',
+      nameGujarati: 'અંબાજી (શક્તિપીઠ)',
+      latitude: 24.3312,
+      longitude: 72.8465,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+    CityLocation(
+      name: 'Shirdi (Sai Baba)',
+      nameHindi: 'शिर्डी (साईं बाबा)',
+      nameGujarati: 'શિરડી (સાંઈ બાબા)',
+      latitude: 19.7667,
+      longitude: 74.4777,
+      timezone: 5.5,
+      isSacred: true,
+    ),
+
     // International Cities (આંતરરાષ્ટ્રીય શહેરો)
     CityLocation(
       name: 'London',
@@ -500,6 +711,7 @@ class LocationService {
       timezone: 9.0,
     ),
   ];
+
 
   static CityLocation get defaultCity => presetCities.firstWhere(
         (c) => c.name == 'New Delhi',
@@ -592,6 +804,86 @@ class LocationService {
     }
     return null;
   }
+
+  /// Searches global and Indian cities, towns, and villages online using OpenStreetMap Geocoding API
+  static Future<List<CityLocation>> searchCitiesOnline(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty || cleanQuery.length < 2) return [];
+
+    try {
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 4),
+          receiveTimeout: const Duration(seconds: 4),
+          headers: {'User-Agent': 'BhagvatGeetaPanchangApp/1.0'},
+        ),
+      );
+
+      final response = await dio.get(
+        'https://nominatim.openstreetmap.org/search',
+        queryParameters: {
+          'q': cleanQuery,
+          'format': 'json',
+          'addressdetails': 1,
+          'limit': 15,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data is List) {
+        final list = response.data as List;
+        final results = <CityLocation>[];
+
+        for (final item in list) {
+          if (item is Map) {
+            final lat = double.tryParse(item['lat']?.toString() ?? '') ?? 0.0;
+            final lon = double.tryParse(item['lon']?.toString() ?? '') ?? 0.0;
+            if (lat == 0.0 && lon == 0.0) continue;
+
+            final address = item['address'] as Map<String, dynamic>? ?? {};
+            final mainName = address['city'] ??
+                address['town'] ??
+                address['municipality'] ??
+                address['suburb'] ??
+                address['village'] ??
+                address['county'] ??
+                item['name'] ??
+                cleanQuery;
+            final state = address['state'] ?? '';
+            final country = address['country'] ?? '';
+
+            final displayName = state.isNotEmpty
+                ? '$mainName, $state'
+                : (country.isNotEmpty ? '$mainName, $country' : mainName.toString());
+
+            // Determine Timezone
+            double tz = 5.5; // Default Indian Standard Time
+            if (country.toString().toLowerCase() != 'india' && country.toString().isNotEmpty) {
+              tz = (lon / 15.0).roundToDouble();
+            }
+
+            final nameHi = '$mainName ${state.isNotEmpty ? "($state)" : ""}';
+            final nameGu = '${CityLocation._convertToGujarati(mainName.toString())} ${state.isNotEmpty ? "(${CityLocation._convertToGujarati(state.toString())})" : ""}';
+
+            results.add(
+              CityLocation(
+                name: displayName,
+                nameHindi: nameHi,
+                nameGujarati: nameGu,
+                latitude: lat,
+                longitude: lon,
+                timezone: tz,
+              ),
+            );
+          }
+        }
+        return results;
+      }
+    } catch (e) {
+      debugPrint('Online city search error: $e');
+    }
+    return [];
+  }
+
 
   /// Fetches the user's live GPS location, reverse geocodes the exact city name,
   /// and configures exact coordinates & local timezone.

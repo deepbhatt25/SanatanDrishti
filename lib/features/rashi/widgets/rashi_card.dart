@@ -27,26 +27,37 @@ class RashiCard extends StatelessWidget {
     final elementName = isGujarati
         ? rashi.elementGujarati.split(' ').first
         : rashi.element.split(' ').first;
+    final planetName = isGujarati
+        ? rashi.rulingPlanetGujarati.split(' ').first
+        : rashi.rulingPlanet.split(' ').first;
 
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
-            ? (isDark ? const Color(0xFF381E10) : const Color(0xFFFFF3E0))
-            : (isDark ? AppColors.cardDark : AppColors.cardLight),
-        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isSelected || isDefault
+              ? (isDark
+                  ? [const Color(0xFF381B14), const Color(0xFF220E09)]
+                  : [const Color(0xFFFFF7EA), const Color(0xFFFFECCB)])
+              : (isDark
+                  ? [const Color(0xFF241313), const Color(0xFF180A0A)]
+                  : [const Color(0xFFFFFDF9), const Color(0xFFFFF8EE)]),
+        ),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected
+          color: isSelected || isDefault
               ? AppColors.saffronPrimary
-              : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
-          width: isSelected ? 1.8 : 1.0,
+              : (isDark ? AppColors.cardBorderDark : AppColors.gold.withAlpha(75)),
+          width: isSelected || isDefault ? 1.8 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: isSelected
-                ? AppColors.saffronPrimary.withAlpha(40)
-                : Colors.black.withAlpha(isDark ? 40 : 10),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: isSelected || isDefault
+                ? AppColors.saffronPrimary.withAlpha(45)
+                : (isDark ? Colors.black.withAlpha(60) : AppColors.maroonPrimary.withAlpha(10)),
+            blurRadius: isSelected || isDefault ? 10 : 6,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -54,94 +65,139 @@ class RashiCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Top Tag: Default indicator if pinned
-                if (isDefault)
+                // Top: "MY RASHI" Pill if default
+                if (isDefault) ...[
                   Container(
-                    margin: const EdgeInsets.only(bottom: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.gold.withAlpha(40),
+                      gradient: const LinearGradient(
+                        colors: [AppColors.gold, AppColors.saffronPrimary],
+                      ),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.gold, width: 0.8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.gold.withAlpha(60),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      isGujarati ? 'મુખ્ય રાશિ' : 'MY RASHI',
-                      style: isGujarati
-                          ? GoogleFonts.notoSerifGujarati(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                            )
-                          : GoogleFonts.outfit(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                            ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.stars_rounded, size: 9, color: Colors.white),
+                        const SizedBox(width: 2),
+                        Text(
+                          isGujarati ? 'મુખ્ય રાશિ' : 'DEFAULT',
+                          style: GoogleFonts.outfit(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 3),
+                ],
 
-                // Zodiac Symbol & Sanskrit Name
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RashiSymbolWidget(
-                      rashi: rashi,
-                      size: 22,
-                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        rashiName,
-                        style: isGujarati
-                            ? GoogleFonts.notoSerifGujarati(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                              )
-                            : GoogleFonts.notoSerifDevanagari(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                              ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                // Authentic Vector Zodiac Icon Emblem
+                RashiSymbolWidget(
+                  rashi: rashi,
+                  size: 40,
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 5),
+
+                // Big & Prominent Localized Rashi Name
+                Text(
+                  rashiName,
+                  style: isGujarati
+                      ? GoogleFonts.notoSerifGujarati(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                          height: 1.15,
+                        )
+                      : GoogleFonts.notoSerifDevanagari(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                          height: 1.15,
+                        ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 1),
 
                 // English Name
                 Text(
                   rashi.englishName,
                   style: GoogleFonts.outfit(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
                 ),
 
                 const SizedBox(height: 4),
 
-                // Ruling Planet & Element
-                Text(
-                  elementName,
-                  style: isGujarati
-                      ? GoogleFonts.notoSerifGujarati(
-                          fontSize: 10,
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        )
-                      : GoogleFonts.outfit(
-                          fontSize: 10,
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                // Element & Ruling Lord Badge (No broken Unicode symbols)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.black.withAlpha(80)
+                        : AppColors.saffronPrimary.withAlpha(15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.cardBorderDark
+                          : AppColors.gold.withAlpha(60),
+                      width: 0.6,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        RashiThemeColors.getElementIcon(rashi.id),
+                        size: 9.5,
+                        color: RashiThemeColors.getElementColor(rashi.id),
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          '$elementName • $planetName',
+                          style: isGujarati
+                              ? GoogleFonts.notoSerifGujarati(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.goldLight : AppColors.textPrimaryLight,
+                                )
+                              : GoogleFonts.notoSerifDevanagari(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.goldLight : AppColors.textPrimaryLight,
+                                ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

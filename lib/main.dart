@@ -12,12 +12,15 @@ import 'core/services/tts_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/geeta/providers/geeta_provider.dart';
 import 'features/geeta/repositories/geeta_repository.dart';
+import 'features/kundali/providers/kundali_provider.dart';
+import 'features/kundali/repositories/kundali_repository.dart';
 import 'features/panchang/providers/panchang_provider.dart';
 import 'features/panchang/repositories/panchang_repository.dart';
 import 'features/rashi/providers/rashi_provider.dart';
 import 'features/rashi/repositories/rashi_repository.dart';
 import 'features/settings/providers/theme_provider.dart';
 import 'features/splash/screens/spiritual_splash_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +63,11 @@ void main() async {
     storageService: storageService,
   );
 
+  final kundaliRepository = KundaliRepository(
+    apiClient: apiClient,
+    storageService: storageService,
+  );
+
   runApp(
     MultiProvider(
       providers: [
@@ -89,11 +97,17 @@ void main() async {
             storageService: storageService,
           ),
         ),
+        ChangeNotifierProvider(
+          create: (_) => KundaliProvider(
+            repository: kundaliRepository,
+          ),
+        ),
       ],
       child: const BhagvatGeetaApp(),
     ),
   );
 }
+
 
 class BhagvatGeetaApp extends StatelessWidget {
   const BhagvatGeetaApp({super.key});

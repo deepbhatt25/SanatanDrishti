@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -26,6 +27,43 @@ class CitySelectorDialog extends StatefulWidget {
 class _CitySelectorDialogState extends State<CitySelectorDialog> {
   String _searchQuery = '';
   bool _isDetecting = false;
+  bool _isSearchingOnline = false;
+  List<CityLocation> _onlineResults = [];
+  Timer? _debounceTimer;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _debounceTimer?.cancel();
+    setState(() {
+      _searchQuery = val;
+      if (val.trim().length >= 2) {
+        _isSearchingOnline = true;
+      } else {
+        _isSearchingOnline = false;
+        _onlineResults = [];
+      }
+    });
+
+    if (val.trim().length >= 2) {
+      _debounceTimer = Timer(const Duration(milliseconds: 380), () async {
+        final results = await LocationService.searchCitiesOnline(val);
+        if (mounted) {
+          setState(() {
+            _onlineResults = results;
+            _isSearchingOnline = false;
+          });
+        }
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +84,13 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
 
     final sacredCities = allCities.where((c) => c.isSacred).toList();
     final otherCities = allCities.where((c) => !c.isSacred).toList();
+
+    final onlineUniqueResults = _onlineResults.where((online) {
+      return !allCities.any((c) =>
+          c.name.toLowerCase() == online.name.toLowerCase() ||
+          ((c.latitude - online.latitude).abs() < 0.05 &&
+              (c.longitude - online.longitude).abs() < 0.05));
+    }).toList();
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.82,
@@ -185,7 +230,8 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
 
             // Search Box
             TextField(
-              onChanged: (val) => setState(() => _searchQuery = val),
+              controller: _searchController,
+              onChanged: _onSearchChanged,
               style: isGujarati
                   ? GoogleFonts.notoSerifGujarati(
                       fontSize: 14,
@@ -196,7 +242,9 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
                       color: isDark ? Colors.white : AppColors.textPrimaryLight,
                     ),
               decoration: InputDecoration(
-                hintText: isGujarati ? 'શહેર શોધો / Search city...' : 'शहर खोजें / Search city...',
+                hintText: isGujarati
+                    ? 'શહેર, ગામ અથવા તાલુકો શોધો (Online Search)...'
+                    : 'शहर, गांव या कस्बा खोजें (Online Search)...',
                 hintStyle: isGujarati
                     ? GoogleFonts.notoSerifGujarati(
                         fontSize: 13,
@@ -207,12 +255,32 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
                         color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                       ),
                 prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.saffronPrimary),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 18),
-                        onPressed: () => setState(() => _searchQuery = ''),
+                suffixIcon: _isSearchingOnline
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.saffronPrimary,
+                          ),
+                        ),
                       )
-                    : null,
+                    : (_searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 18),
+                            onPressed: () {
+                              _debounceTimer?.cancel();
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _onlineResults = [];
+                                _isSearchingOnline = false;
+                              });
+                            },
+                          )
+                        : null),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 filled: true,
                 fillColor: isDark ? AppColors.cardDark : AppColors.bgLight,
@@ -238,7 +306,7 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
             const SizedBox(height: 12),
 
             Expanded(
-              child: allCities.isEmpty
+              child: allCities.isEmpty && onlineUniqueResults.isEmpty && !_isSearchingOnline
                   ? Center(
                       child: Text(
                         isGujarati ? 'કોઈ સ્થાન મળ્યું નથી / No city found' : 'कोई स्थान नहीं मिला / No city found',
@@ -253,6 +321,27 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
                     )
                   : ListView(
                       children: [
+                        // Online Search Results
+                        if (onlineUniqueResults.isNotEmpty) ...[
+                          Text(
+                            isGujarati ? 'ઓનલાઇન શોધ પરિણામો (Online Results)' : 'ऑनलाइन खोज परिणाम (Online Results)',
+                            style: isGujarati
+                                ? GoogleFonts.notoSerifGujarati(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.saffronPrimary,
+                                  )
+                                : GoogleFonts.notoSerifDevanagari(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.saffronPrimary,
+                                  ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...onlineUniqueResults.map((city) => _buildCityTile(context, city, currentCity, panchangProvider, isDark, isGujarati, currentLang, isOnline: true)),
+                          const SizedBox(height: 14),
+                        ],
+
                         // Sacred Pilgrimage Cities
                         if (sacredCities.isNotEmpty) ...[
                           Text(
@@ -309,8 +398,10 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
     PanchangProvider provider,
     bool isDark,
     bool isGujarati,
-    AppLanguage currentLang,
-  ) {
+    AppLanguage currentLang, {
+    bool isOnline = false,
+  }) {
+
     final isSelected = currentCity.name.toLowerCase() == city.name.toLowerCase() ||
         currentCity.nameHindi == city.nameHindi;
 
@@ -331,23 +422,49 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
       child: ListTile(
         dense: true,
         leading: Icon(
-          city.isSacred ? Icons.temple_hindu_rounded : Icons.location_city_rounded,
-          color: isSelected ? AppColors.saffronPrimary : (isDark ? AppColors.goldLight : AppColors.maroonPrimary),
+          city.isSacred
+              ? Icons.temple_hindu_rounded
+              : (isOnline ? Icons.travel_explore_rounded : Icons.location_city_rounded),
+          color: isSelected
+              ? AppColors.saffronPrimary
+              : (isOnline ? AppColors.gold : (isDark ? AppColors.goldLight : AppColors.maroonPrimary)),
           size: 20,
         ),
-        title: Text(
-          city.getLocalizedName(currentLang),
-          style: isGujarati
-              ? GoogleFonts.notoSerifGujarati(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                )
-              : GoogleFonts.notoSerifDevanagari(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                city.getLocalizedName(currentLang),
+                style: isGujarati
+                    ? GoogleFonts.notoSerifGujarati(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      )
+                    : GoogleFonts.notoSerifDevanagari(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      ),
+              ),
+            ),
+            if (isOnline)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.saffronPrimary.withAlpha(25),
+                  borderRadius: BorderRadius.circular(6),
                 ),
+                child: Text(
+                  'Online',
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.saffronPrimary,
+                  ),
+                ),
+              ),
+          ],
         ),
         subtitle: Text(
           '${city.name} (${city.latitude.toStringAsFixed(2)}°N, ${city.longitude.toStringAsFixed(2)}°E)',
@@ -364,3 +481,4 @@ class _CitySelectorDialogState extends State<CitySelectorDialog> {
     );
   }
 }
+

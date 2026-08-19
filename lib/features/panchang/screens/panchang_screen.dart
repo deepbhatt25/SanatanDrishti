@@ -13,11 +13,20 @@ import '../widgets/choghadiya_widget.dart';
 import '../widgets/muhurta_grid.dart';
 import '../widgets/panchang_card.dart';
 import '../widgets/sun_moon_tracker.dart';
+import '../widgets/tithi_calendar_widget.dart';
 import 'baby_rashi_sheet.dart';
 import 'city_selector_dialog.dart';
 
-class PanchangScreen extends StatelessWidget {
+class PanchangScreen extends StatefulWidget {
   const PanchangScreen({super.key});
+
+  @override
+  State<PanchangScreen> createState() => _PanchangScreenState();
+}
+
+class _PanchangScreenState extends State<PanchangScreen> {
+  // 0: Daily Panchang, 1: Monthly Tithi Calendar
+  int _activeViewIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -34,38 +43,26 @@ class PanchangScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: CustomSpiritualAppBar(
-        title: AppStrings.panchangTitle(currentLang),
+        title: _activeViewIndex == 0
+            ? AppStrings.panchangTitle(currentLang)
+            : (isGujarati ? 'ગુજરાતી તિથિ કેલેન્ડર' : 'मासिक तिथि पंचांग कैलेंडर'),
         subtitle: formattedDateEn,
         showOm: true,
         showLanguageToggle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month_rounded, color: AppColors.goldLight),
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: selectedDate,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2050),
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.light(
-                        primary: AppColors.maroonPrimary,
-                        onPrimary: Colors.white,
-                        surface: isDark ? AppColors.surfaceDark : Colors.white,
-                        onSurface: isDark ? Colors.white : AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    child: child!,
-                  );
-                },
-              );
-              if (picked != null) {
-                panchangProvider.selectDate(picked);
-              }
+            icon: Icon(
+              _activeViewIndex == 1 ? Icons.view_day_rounded : Icons.calendar_month_rounded,
+              color: AppColors.goldLight,
+            ),
+            onPressed: () {
+              setState(() {
+                _activeViewIndex = _activeViewIndex == 0 ? 1 : 0;
+              });
             },
-            tooltip: 'Select Date',
+            tooltip: _activeViewIndex == 0
+                ? (isGujarati ? 'માસિક કેલેન્ડર' : 'मासिक कैलेंडर')
+                : (isGujarati ? 'દૈનિક પંચાંગ' : 'दैनिक पंचांग'),
           ),
           IconButton(
             icon: const Icon(Icons.location_on_rounded, color: AppColors.goldLight),
@@ -123,65 +120,296 @@ class PanchangScreen extends StatelessWidget {
             // Sub Header: Date & City bar with quick navigation
             _buildLocationDateBar(context, panchangProvider, isToday, formattedDateEn, isDark, isGujarati, currentLang),
 
-            // Scrollable Content
+            // Spiritual Segmented Tab Switcher (Daily vs Monthly Calendar)
+            _buildViewSegmentBar(isDark, isGujarati),
+
+            // Main Content Area
             Expanded(
-              child: panchangProvider.isLoading
-                  ? const SingleChildScrollView(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          LoadingSkeletonCard(height: 240),
-                          SizedBox(height: 12),
-                          LoadingSkeletonCard(height: 120),
-                          SizedBox(height: 12),
-                          LoadingSkeletonCard(height: 200),
-                        ],
-                      ),
+              child: _activeViewIndex == 1
+                  ? ListView(
+                      padding: const EdgeInsets.only(bottom: 80),
+                      children: [
+                        TithiCalendarWidget(
+                          onDateSelectedCallback: () {
+                            // User picked date in calendar
+                          },
+                        ),
+                        // Action card to switch to full daily view for selected date
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _activeViewIndex = 0;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.maroonPrimary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 2,
+                            ),
+                            icon: const Icon(Icons.auto_stories_rounded, color: AppColors.goldLight, size: 18),
+                            label: Text(
+                              isGujarati
+                                  ? 'આ દિવસનું સંપૂર્ણ દૈનિક પંચાંગ જુઓ'
+                                  : 'इस दिन का सम्पूर्ण दैनिक पंचांग देखें',
+                              style: isGujarati
+                                  ? GoogleFonts.notoSerifGujarati(fontSize: 13, fontWeight: FontWeight.bold)
+                                  : GoogleFonts.notoSerifDevanagari(fontSize: 13, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
                     )
-                  : panchang == null
-                      ? Center(
+                  : panchangProvider.isLoading
+                      ? const SingleChildScrollView(
+                          padding: EdgeInsets.all(16),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.wb_sunny_rounded, size: 48, color: AppColors.saffronPrimary),
-                              const SizedBox(height: 12),
-                              Text(
-                                isGujarati ? 'પંચાંગ ગણતરી ચાલુ છે...' : 'Calculating sacred calendar...',
-                                style: isGujarati ? GoogleFonts.notoSerifGujarati() : GoogleFonts.outfit(),
-                              ),
-                              const SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: () => panchangProvider.loadPanchang(forceRefresh: true),
-                                child: Text(AppStrings.retry(currentLang)),
-                              ),
+                              LoadingSkeletonCard(height: 240),
+                              SizedBox(height: 12),
+                              LoadingSkeletonCard(height: 120),
+                              SizedBox(height: 12),
+                              LoadingSkeletonCard(height: 200),
                             ],
                           ),
                         )
-                      : ListView(
-                          padding: const EdgeInsets.only(bottom: 80),
-                          children: [
-                            // Primary Panchang Card
-                            PanchangCard(panchang: panchang),
+                      : panchang == null
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.wb_sunny_rounded, size: 48, color: AppColors.saffronPrimary),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    isGujarati ? 'પંચાંગ ગણતરી ચાલુ છે...' : 'Calculating sacred calendar...',
+                                    style: isGujarati ? GoogleFonts.notoSerifGujarati() : GoogleFonts.outfit(),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ElevatedButton(
+                                    onPressed: () => panchangProvider.loadPanchang(forceRefresh: true),
+                                    child: Text(AppStrings.retry(currentLang)),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView(
+                              padding: const EdgeInsets.only(bottom: 80),
+                              children: [
+                                // Primary Panchang Card
+                                PanchangCard(panchang: panchang),
 
-                            // Sun and Moon times tracker
-                            SunMoonTracker(panchang: panchang),
+                                // Sun and Moon times tracker
+                                SunMoonTracker(panchang: panchang),
 
-                            // Muhurtas (Auspicious & Inauspicious)
-                            MuhurtaGrid(panchang: panchang),
+                                // Muhurtas (Auspicious & Inauspicious)
+                                MuhurtaGrid(panchang: panchang),
 
-                            // Day and Night Choghadiya Section
-                            ChoghadiyaWidget(
-                              selectedDate: panchangProvider.selectedDate,
-                              selectedCity: panchangProvider.selectedCity,
+                                // Day and Night Choghadiya Section
+                                ChoghadiyaWidget(
+                                  selectedDate: panchangProvider.selectedDate,
+                                  selectedCity: panchangProvider.selectedCity,
+                                ),
+
+                                // Embedded Quick Monthly Calendar Preview Card
+                                _buildMonthlyCalendarBanner(context, isDark, isGujarati),
+
+                                // Vedic Season & Cosmic Attributes Card
+                                _buildCosmicAttributesCard(context, panchang, isDark, isGujarati, currentLang),
+                              ],
                             ),
-
-                            // Vedic Season & Cosmic Attributes Card
-                            _buildCosmicAttributesCard(context, panchang, isDark, isGujarati, currentLang),
-                          ],
-                        ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildViewSegmentBar(bool isDark, bool isGujarati) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : AppColors.saffronPrimary.withAlpha(15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : AppColors.gold.withAlpha(70),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Tab 0: Daily Panchang
+          Expanded(
+            child: InkWell(
+              onTap: () => setState(() => _activeViewIndex = 0),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: _activeViewIndex == 0
+                      ? const LinearGradient(
+                          colors: [AppColors.saffronPrimary, Color(0xFFE65100)],
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.wb_sunny_rounded,
+                      size: 16,
+                      color: _activeViewIndex == 0 ? Colors.white : (isDark ? Colors.white70 : AppColors.maroonPrimary),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isGujarati ? 'દૈનિક પંચાંગ' : 'दैनिक पंचांग',
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              color: _activeViewIndex == 0 ? Colors.white : (isDark ? Colors.white70 : AppColors.maroonPrimary),
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              color: _activeViewIndex == 0 ? Colors.white : (isDark ? Colors.white70 : AppColors.maroonPrimary),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Tab 1: Monthly Tithi Calendar
+          Expanded(
+            child: InkWell(
+              onTap: () => setState(() => _activeViewIndex = 1),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: _activeViewIndex == 1
+                      ? const LinearGradient(
+                          colors: [AppColors.saffronPrimary, Color(0xFFE65100)],
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.calendar_month_rounded,
+                      size: 16,
+                      color: _activeViewIndex == 1 ? Colors.white : (isDark ? Colors.white70 : AppColors.maroonPrimary),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isGujarati ? 'તિથિ કેલેન્ડર' : 'तिथि कैलेंडर',
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              color: _activeViewIndex == 1 ? Colors.white : (isDark ? Colors.white70 : AppColors.maroonPrimary),
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              color: _activeViewIndex == 1 ? Colors.white : (isDark ? Colors.white70 : AppColors.maroonPrimary),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyCalendarBanner(BuildContext context, bool isDark, bool isGujarati) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.maroonPrimary.withAlpha(40),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.black.withAlpha(60),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.calendar_month_rounded, color: AppColors.goldLight, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isGujarati ? 'માસિક તિથિ પંચાંગ કેલેન્ડર' : 'मासिक तिथि पंचांग कैलेंडर',
+                  style: isGujarati
+                      ? GoogleFonts.notoSerifGujarati(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        )
+                      : GoogleFonts.notoSerifDevanagari(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isGujarati
+                      ? 'સુદ, વદ, એકાદશી, પૂનમ અને તહેવારો જુઓ'
+                      : 'शुक्ल, कृष्ण, एकादशी, पूर्णिमा एवं त्योहार देखें',
+                  style: isGujarati
+                      ? GoogleFonts.notoSerifGujarati(fontSize: 11, color: Colors.white70)
+                      : GoogleFonts.notoSerifDevanagari(fontSize: 11, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => setState(() => _activeViewIndex = 1),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.gold,
+              foregroundColor: Colors.black87,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(
+              isGujarati ? 'ખોલો' : 'खोलें',
+              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }

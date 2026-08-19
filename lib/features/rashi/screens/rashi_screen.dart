@@ -7,10 +7,12 @@ import '../../../core/constants/rashi_data.dart';
 import '../../../core/providers/language_provider.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/rashi_symbol_widget.dart';
+import '../../kundali/screens/create_kundali_screen.dart';
 import '../providers/rashi_provider.dart';
 import '../widgets/rashi_card.dart';
 import '../widgets/rashi_wheel.dart';
 import 'rashi_detail_screen.dart';
+
 
 class RashiScreen extends StatefulWidget {
   const RashiScreen({super.key});
@@ -156,6 +158,93 @@ class _RashiScreenState extends State<RashiScreen> {
             ),
           ),
 
+          // Janam Kundali Discovery Banner
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(isDark ? 40 : 10),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.saffronPrimary.withAlpha(25),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: AppColors.saffronPrimary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isGujarati ? 'વૈદિક જન્મ કુંડળી' : 'वैदिक जन्म कुंडली',
+                          style: isGujarati
+                              ? GoogleFonts.notoSerifGujarati(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                )
+                              : GoogleFonts.notoSerifDevanagari(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                ),
+                        ),
+                        Text(
+                          isGujarati
+                              ? 'લગ્ન ચક્ર, ગ્રહ સ્થિતિ, દશા અને દોષ વિશ્લેષણ'
+                              : 'लग्न चक्र, ग्रह स्थिति, दशा एवं दोष विश्लेषण',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CreateKundaliScreen()),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.saffronPrimary,
+                      side: const BorderSide(color: AppColors.saffronPrimary, width: 1.2),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(
+                      isGujarati ? 'બનાવો' : 'बनाएं',
+                      style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // Section Title
           SliverToBoxAdapter(
             child: Padding(
@@ -220,13 +309,13 @@ class _RashiScreenState extends State<RashiScreen> {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 32),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 0.92,
+                  childAspectRatio: 0.78,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {

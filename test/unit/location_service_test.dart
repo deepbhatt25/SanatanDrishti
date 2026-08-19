@@ -18,6 +18,12 @@ void main() {
       final kathmandu = LocationService.getCityByName('Kathmandu');
       expect(kathmandu.isSacred, true);
       expect(kathmandu.timezone, 5.75);
+
+      final mahuva = LocationService.getCityByName('Mahuva');
+      expect(mahuva.name.contains('Mahuva'), true);
+      expect(mahuva.nameGujarati?.contains('મહુવા'), true);
+      expect(mahuva.latitude, closeTo(21.09, 0.2));
+      expect(mahuva.longitude, closeTo(71.76, 1.5));
     });
   });
 }

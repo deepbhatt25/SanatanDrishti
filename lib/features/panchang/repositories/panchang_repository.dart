@@ -121,9 +121,116 @@ class PanchangRepository {
   }
 
   // --- Dynamic Vedic Astronomical Calculation Engine ---
+  static ({
+    int tithiIndex,
+    int tithiNumberInPaksha,
+    bool isShukla,
+    String tithiNameHi,
+    String tithiNameGu,
+    String shortTithiHi,
+    String shortTithiGu,
+    String pakshaLabelHi,
+    String pakshaLabelGu,
+  }) calculateVedicTithi(DateTime date) {
+    // Days since J2000 epoch at local Sunrise (06:00 AM IST = 00:30 UTC)
+    final utcSunrise = DateTime.utc(date.year, date.month, date.day, 0, 30);
+    final d = utcSunrise.difference(DateTime.utc(2000, 1, 1, 12, 0)).inSeconds / 86400.0;
+
+    // Mean Sun Longitude
+    final sunMeanLong = (280.460 + 0.9856474 * d) % 360;
+    final sunMeanAnomaly = (357.528 + 0.9856003 * d) * (math.pi / 180);
+    final sunEclipticLong = (sunMeanLong + 1.915 * math.sin(sunMeanAnomaly) + 0.020 * math.sin(2 * sunMeanAnomaly)) % 360;
+
+    // Mean Moon Longitude
+    final moonMeanLong = (218.316 + 13.176396 * d) % 360;
+    final moonMeanAnomaly = (134.963 + 13.064993 * d) * (math.pi / 180);
+    final moonEclipticLong = (moonMeanLong + 6.289 * math.sin(moonMeanAnomaly)) % 360;
+
+    // Lahiri Ayanamsha
+    final yearsSince2000 = date.year - 2000 + (date.month - 1) / 12.0;
+    final ayanamsha = 23.85 + 0.01397 * yearsSince2000;
+
+    // Sidereal Positions
+    final siderealSunLong = (sunEclipticLong - ayanamsha + 360) % 360;
+    final siderealMoonLong = (moonEclipticLong - ayanamsha + 360) % 360;
+
+    // 1. Tithi Calculation: (Moon - Sun) / 12 degrees
+    final tithiAngle = (siderealMoonLong - siderealSunLong + 360) % 360;
+    final tithiIndex = (tithiAngle / 12).floor() % 30; // 0 to 29
+    final isShukla = tithiIndex < 15;
+    final tithiNumberInPaksha = (tithiIndex % 15) + 1; // 1 to 15
+
+    const tithiNamesHi = [
+      'प्रतिपदा', 'द्वितीया', 'तृतीया', 'चतुर्थी', 'पञ्चमी',
+      'षष्ठी', 'सप्तमी', 'अष्टमी', 'नवमी', 'दशमी',
+      'एकादशी', 'द्वादशी', 'त्रयोदशी', 'चतुर्दशी', 'पूर्णिमा',
+    ];
+    const tithiNamesGu = [
+      'પડવો', 'બીજ', 'ત્રીજ', 'ચોથ', 'પાંચમ',
+      'છઠ', 'સાતમ', 'આઠમ', 'નોમ', 'દસમ',
+      'અગિયારસ', 'બારસ', 'તેરસ', 'ચૌદશ', 'પૂનમ',
+    ];
+
+    String tithiNameHi;
+    String tithiNameGu;
+    String shortTithiHi;
+    String shortTithiGu;
+
+    const devanagariDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+    const gujaratiDigits = ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯'];
+    String toDevanagari(int n) => n.toString().split('').map((c) => devanagariDigits[int.parse(c)]).join();
+    String toGujarati(int n) => n.toString().split('').map((c) => gujaratiDigits[int.parse(c)]).join();
+
+    final hiNum = toDevanagari(tithiNumberInPaksha);
+    final guNum = toGujarati(tithiNumberInPaksha);
+
+    if (tithiIndex == 14) {
+      tithiNameHi = 'पूर्णिमा';
+      tithiNameGu = 'પૂનમ';
+      shortTithiHi = 'पूर्णिमा';
+      shortTithiGu = 'પૂનમ';
+    } else if (tithiIndex == 29) {
+      tithiNameHi = 'अमावस्या';
+      tithiNameGu = 'અમાસ';
+      shortTithiHi = 'अमावस्या';
+      shortTithiGu = 'અમાસ';
+    } else if (tithiNumberInPaksha == 11) {
+      tithiNameHi = isShukla ? 'शुक्ल एकादशी' : 'कृष्ण एकादशी';
+      tithiNameGu = isShukla ? 'સુદ અગિયારસ' : 'વદ અગિયારસ';
+      shortTithiHi = isShukla ? 'शु. ११' : 'कृ. ११';
+      shortTithiGu = isShukla ? 'સુદ ૧૧' : 'વદ ૧૧';
+    } else {
+      final pakshaPrefixHi = isShukla ? 'शुक्ल' : 'कृष्ण';
+      final pakshaPrefixGu = isShukla ? 'સુદ' : 'વદ';
+      final shortPakshaHi = isShukla ? 'शु.' : 'कृ.';
+      final shortPakshaGu = isShukla ? 'સુદ' : 'વદ';
+
+      final tNameHi = tithiNamesHi[tithiNumberInPaksha - 1];
+      final tNameGu = tithiNamesGu[tithiNumberInPaksha - 1];
+
+      tithiNameHi = '$pakshaPrefixHi $tNameHi';
+      tithiNameGu = '$pakshaPrefixGu $tNameGu';
+      shortTithiHi = '$shortPakshaHi $hiNum';
+      shortTithiGu = '$shortPakshaGu $guNum';
+    }
+
+    return (
+      tithiIndex: tithiIndex,
+      tithiNumberInPaksha: tithiNumberInPaksha,
+      isShukla: isShukla,
+      tithiNameHi: tithiNameHi,
+      tithiNameGu: tithiNameGu,
+      shortTithiHi: shortTithiHi,
+      shortTithiGu: shortTithiGu,
+      pakshaLabelHi: isShukla ? 'शुक्ल पक्ष' : 'कृष्ण पक्ष',
+      pakshaLabelGu: isShukla ? 'સુદ પક્ષ' : 'વદ પક્ષ',
+    );
+  }
+
   static PanchangModel calculateVedicPanchang(DateTime date, CityLocation city) {
-    // Days since J2000 epoch (2000-01-01 12:00 UTC)
-    final d = date.difference(DateTime.utc(2000, 1, 1, 12, 0)).inDays + 0.5;
+    // Days since J2000 epoch at local Sunrise (06:00 AM IST = 00:30 UTC)
+    final utcSunrise = DateTime.utc(date.year, date.month, date.day, 0, 30);
+    final d = utcSunrise.difference(DateTime.utc(2000, 1, 1, 12, 0)).inSeconds / 86400.0;
 
     // Mean Sun Longitude
     final sunMeanLong = (280.460 + 0.9856474 * d) % 360;

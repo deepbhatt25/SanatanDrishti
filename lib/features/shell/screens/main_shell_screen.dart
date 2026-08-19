@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/language_provider.dart';
 import '../../geeta/screens/chapters_screen.dart';
+import '../../kundali/screens/create_kundali_screen.dart';
 import '../../panchang/screens/panchang_screen.dart';
 import '../../rashi/screens/rashi_screen.dart';
 import '../../settings/screens/settings_screen.dart';
@@ -25,6 +30,9 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+    final isGujarati = langProvider.isGujarati;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -56,7 +64,25 @@ class _MainShellScreenState extends State<MainShellScreen> {
               foregroundColor: Theme.of(context).colorScheme.primary,
               child: const Icon(Icons.settings_outlined, size: 20),
             )
-          : null,
+          : (_currentIndex == 2
+              ? FloatingActionButton.extended(
+                  heroTag: 'rashi_kundali_fab',
+                  backgroundColor: AppColors.saffronPrimary,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                  label: Text(
+                    isGujarati ? 'કુંડળી બનાવો' : 'कुंडली बनाएं',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreateKundaliScreen()),
+                    );
+                  },
+                )
+              : null),
     );
   }
 }
+

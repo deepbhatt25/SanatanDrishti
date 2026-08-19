@@ -13,7 +13,7 @@ class AppStrings {
 
   // Geeta
   static String geetaHomeTitle(AppLanguage lang) =>
-      lang == AppLanguage.gujarati ? '॥ શ્રીમદ્ભગવદ્ગીતા ॥' : '॥ श्रीमद्भगवद्गीता ॥';
+      lang == AppLanguage.gujarati ? 'શ્રીમદ્ ભગવદ્ ગીતા' : 'श्रीमद्भगवद्गीता';
   static String geetaSubtitle(AppLanguage lang) =>
       lang == AppLanguage.gujarati ? 'અઢાર પાવન અધ્યાયો • ૭૦૦ શ્લોકો' : 'अष्टादश अध्यायाः • ७०० श्लोकाः';
 
@@ -140,4 +140,57 @@ class AppStrings {
       lang == AppLanguage.gujarati ? 'જ્યારે શ્લોકનું વાચન પૂર્ણ થાય ત્યારે આપમેળે આગળનો શ્લોક ચલાવો' : 'श्लोक वाचन पूर्ण होने पर स्वतः अगला श्लोक चलाएं';
   static String defaultRashiTitle(AppLanguage lang) =>
       lang == AppLanguage.gujarati ? 'મારી મૂળ રાશિ (Default Rashi)' : 'मेरी डिफ़ॉल्ट राशि (Default Rashi)';
+
+  // Kundali
+  static String createKundali(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'કુંડળી બનાવો' : 'कुंडली बनाएं';
+  static String createKundaliSubtitle(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'સચોટ વૈદિક જન્મપત્રિકા અને ગ્રહ ફળાદેશ' : 'सटीक वैदिक जन्मपत्रिका एवं ग्रह फलादेश';
+  static String janamKundali(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'જન્મ કુંડળી' : 'जन्म कुंडली';
+  static String savedKundalis(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'મારી સંગ્રહિત કુંડળીઓ' : 'मेरी संग्रहित कुंडलियां';
+  static String savedKundalisSubtitle(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'સાચવેલી કુંડળીઓ જુઓ અને ડાઉનલોડ કરો' : 'सहेजी गई कुंडलियां देखें एवं डाउनलोड करें';
+  static String fullName(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'જાતકનું પૂરું નામ' : 'जातक का पूरा नाम';
+  static String gender(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'જાતિ (લિંગ)' : 'लिंग (Gender)';
+  static String male(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'પુરુષ (Male)' : 'पुरुष (Male)';
+  static String female(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'સ્ત્રી (Female)' : 'स्त्री (Female)';
+  static String otherGender(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'અન્ય (Other)' : 'अन्य (Other)';
+  static String dateOfBirthLabel(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'જન્મ તારીખ' : 'जन्म तिथि (Date of Birth)';
+  static String birthTimeLabel(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'જન્મ સમય' : 'जन्म समय (Time of Birth)';
+  static String birthPlaceLabel(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'જન્મ સ્થાન (શહેર)' : 'जन्म स्थान (City)';
+  static String generateKundaliBtn(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'કુંડળી બનાવો અને જુઓ' : 'कुंडली बनाएं एवं देखें';
+  static String downloadKundaliBtn(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'ડાઉનલોડ / સાચવો' : 'डाउनलोड / सहेजें';
+  static String lagnaChart(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'લગ્ન કુંડળી (D1)' : 'लग्न कुंडली (D1)';
+  static String navamshaChart(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'નવમાંશ કુંડળી (D9)' : 'नवमांश कुंडली (D9)';
+  static String chandraChart(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'ચંદ્ર કુંડળી' : 'चन्द्र कुंडली';
+  static String grahaSthiti(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'ગ્રહ સ્થિતિ' : 'ग्रह स्थिति';
+  static String doshaAnalysis(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'દોષ વિશ્લેષણ' : 'दोष विश्लेषण';
+  static String dashaTimeline(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'વિંશોત્તરી દશા' : 'विंशोत्तरी दशा';
+  static String bhavaPhala(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? '૧૨ ભાવ ફળાદેશ' : '१२ भाव फलादेश';
+  static String avakahadaChakra(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'અવકહડા ચક્ર' : 'अवकहड़ा चक्र';
+  static String noSavedKundalis(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'કોઈ સંગ્રહિત કુંડળી નથી' : 'कोई संग्रहित कुंडली नहीं है';
+  static String deleteConfirm(AppLanguage lang) =>
+      lang == AppLanguage.gujarati ? 'શું તમે આ કુંડળી કાઢી નાખવા માંગો છો?' : 'क्या आप यह कुंडली हटाना चाहते हैं?';
 }
+
