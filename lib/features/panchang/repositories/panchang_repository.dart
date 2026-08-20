@@ -125,6 +125,9 @@ class PanchangRepository {
     int tithiIndex,
     int tithiNumberInPaksha,
     bool isShukla,
+    int lunarMonthId,
+    String lunarMonthHi,
+    String lunarMonthGu,
     String tithiNameHi,
     String tithiNameGu,
     String shortTithiHi,
@@ -159,6 +162,27 @@ class PanchangRepository {
     final tithiIndex = (tithiAngle / 12).floor() % 30; // 0 to 29
     final isShukla = tithiIndex < 15;
     final tithiNumberInPaksha = (tithiIndex % 15) + 1; // 1 to 15
+
+    // 2. Amanta Lunar Month Calculation (1 = Chaitra, ..., 6 = Bhadrapada, 7 = Ashvina, 8 = Kartika, ..., 12 = Phalguna)
+    // In the Amanta system (Gujarat, Maharashtra, etc.), the month begins at Shukla Pratipada (following Amavasya).
+    // The month is determined by the Sidereal Sign of the Sun at the preceding New Moon (Amavasya).
+    // Days since last New Moon = (tithiIndex * 0.9856) days of Sun motion
+    final sunLongAtNewMoon = (siderealSunLong - (tithiIndex * 0.9856) + 360) % 360;
+    final sunRashiAtNewMoon = (sunLongAtNewMoon / 30.0).floor() % 12 + 1; // 1=Mesha, ..., 6=Kanya, 7=Tula, ..., 12=Meena
+    // If Sun was in Meena (12) at New Moon -> Chaitra (1). If in Kanya (6) -> Ashvina (7). If in Tula (7) -> Kartika (8).
+    final lunarMonthId = (sunRashiAtNewMoon % 12) + 1;
+
+    const lunarMonthsHi = [
+      'चैत्र', 'वैशाख', 'ज्येष्ठ', 'आषाढ़', 'श्रावण', 'भाद्रपद',
+      'आश्विन', 'कार्तिक', 'मार्गशीर्ष', 'पौष', 'माघ', 'फाल्गुन'
+    ];
+    const lunarMonthsGu = [
+      'ચૈત્ર', 'વૈશાખ', 'જેઠ', 'અષાઢ', 'શ્રાવણ', 'ભાદરવો',
+      'આસો', 'કારતક', 'માગશર', 'પોષ', 'મહા', 'ફાગણ'
+    ];
+
+    final lunarMonthHi = lunarMonthsHi[lunarMonthId - 1];
+    final lunarMonthGu = lunarMonthsGu[lunarMonthId - 1];
 
     const tithiNamesHi = [
       'प्रतिपदा', 'द्वितीया', 'तृतीया', 'चतुर्थी', 'पञ्चमी',
@@ -218,6 +242,9 @@ class PanchangRepository {
       tithiIndex: tithiIndex,
       tithiNumberInPaksha: tithiNumberInPaksha,
       isShukla: isShukla,
+      lunarMonthId: lunarMonthId,
+      lunarMonthHi: lunarMonthHi,
+      lunarMonthGu: lunarMonthGu,
       tithiNameHi: tithiNameHi,
       tithiNameGu: tithiNameGu,
       shortTithiHi: shortTithiHi,

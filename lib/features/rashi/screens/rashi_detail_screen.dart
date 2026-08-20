@@ -7,12 +7,15 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/rashi_data.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
+import '../../../core/widgets/ad_reward_dialog.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/error_state_view.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../core/widgets/rashi_symbol_widget.dart';
 import '../models/rashi_model.dart';
 import '../providers/rashi_provider.dart';
+import 'mantra_japa_screen.dart';
 
 class RashiDetailScreen extends StatefulWidget {
   final RashiInfo rashi;
@@ -25,6 +28,7 @@ class RashiDetailScreen extends StatefulWidget {
 
 class _RashiDetailScreenState extends State<RashiDetailScreen> {
   int _chantCount = 0;
+  bool _isTomorrowUnlocked = false;
 
   @override
   void initState() {
@@ -138,24 +142,354 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
 
                             // Daily Guidance / Main Horoscope Card
                             if (reading != null) ...[
-                              _buildHoroscopeCard(context, rashi, reading, isDark),
+                              _buildHoroscopeCard(context, rashi, reading, isDark, isGujarati),
                               const SizedBox(height: 16),
 
                               // Domain Specific Cards (Career, Family, Health)
-                              _buildDomainGuidanceCard(context, reading, isDark),
+                              _buildDomainGuidanceCard(context, reading, isDark, isGujarati),
                               const SizedBox(height: 16),
 
                               // Auspicious Attributes Grid
-                              _buildLuckyTraitsGrid(context, rashi, reading, isDark),
+                              _buildLuckyTraitsGrid(context, rashi, reading, isDark, isGujarati),
                               const SizedBox(height: 16),
                             ],
 
                             // Sacred Mantra & Interactive Japa Counter Card
-                            _buildMantraCard(context, rashi, isDark),
+                            _buildMantraCard(context, rashi, isDark, isGujarati),
+
+                            const SizedBox(height: 16),
+
+                            // Rewarded Video Card: Unlock Planetary Transit Guidance
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.maroonPrimary.withAlpha(40),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppColors.gold,
+                                        ),
+                                        child: const Icon(Icons.stars_rounded, color: Colors.black87, size: 22),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              isGujarati ? 'આવતીકાલનું ગ્રહ ગોચર ફળ' : 'कल का विस्तृत ग्रह गोचर फल',
+                                              style: isGujarati
+                                                  ? GoogleFonts.notoSerifGujarati(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    )
+                                                  : GoogleFonts.notoSerifDevanagari(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _isTomorrowUnlocked
+                                                  ? (isGujarati ? 'સંપૂર્ણ ગોચર ફળ અને શુભ મુહૂર્ત સક્રિય' : 'सम्पूर्ण गोचर फल एवं शुभ मुहूर्त सक्रिय')
+                                                  : (isGujarati
+                                                      ? 'આવતીકાલના શુભ ચોઘડિયા અને ગ્રહ નક્ષત્ર ફળ જોવા માટે વિડિઓ જુઓ'
+                                                      : 'कल के शुभ चौघड़िया एवं ग्रह नक्षत्र फल देखने के लिए वीडियो देखें'),
+                                              style: GoogleFonts.outfit(fontSize: 11, color: Colors.white70),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (_isTomorrowUnlocked)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.gold.withAlpha(40),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: AppColors.gold, width: 1),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.check_circle_rounded, color: AppColors.gold, size: 15),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                isGujarati ? 'અનલૉક' : 'अनलॉक',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            AdRewardDialog.show(
+                                              context,
+                                              title: isGujarati ? 'આવતીકાલનું રાશિફળ' : 'कल का सम्पूर्ण राशिफल',
+                                              description: isGujarati
+                                                  ? 'આવતીકાલનું વિગતવાર ગ્રહ ગોચર અને શુભ મુહૂર્ત અનલૉક કરવા માટે એક નાનો વિડિઓ જુઓ.'
+                                                  : 'कल का विस्तृत ग्रह गोचर एवं शुभ मुहूर्त अनलॉक करने के लिए एक छोटा वीडियो देखें।',
+                                              rewardDescription: isGujarati ? 'આવતીકાલનું રાશિફળ અનલૉક થશે' : 'कल का सम्पूर्ण राशिफल अनलॉक होगा',
+                                              onRewardGranted: () {
+                                                setState(() {
+                                                  _isTomorrowUnlocked = true;
+                                                });
+                                                final tomorrow = DateTime.now().add(const Duration(days: 1));
+                                                rashiProvider.selectDate(tomorrow, rashi: rashi);
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (ctx) => AlertDialog(
+                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                                    backgroundColor: AppColors.cardDark,
+                                                    title: Row(
+                                                      children: [
+                                                        const Icon(Icons.stars_rounded, color: AppColors.gold, size: 28),
+                                                        const SizedBox(width: 10),
+                                                        Text(
+                                                          isGujarati ? 'રાશિફળ અનલૉક!' : 'राशिफल अनलॉक!',
+                                                          style: isGujarati
+                                                              ? GoogleFonts.notoSerifGujarati(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: AppColors.goldLight,
+                                                                )
+                                                              : GoogleFonts.notoSerifDevanagari(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: AppColors.goldLight,
+                                                                ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    content: Text(
+                                                      isGujarati
+                                                          ? 'આવતીકાલનું સંપૂર્ણ રાશિફળ, શુભ ચોઘડિયા અને ગ્રહ ગોચર ફળ સફળતાપૂર્વક અનલૉક થઈ ગયું છે.'
+                                                          : 'कल का सम्पूर्ण राशिफल, शुभ चौघड़िया एवं ग्रह गोचर फल सफलतापूर्वक अनलॉक हो चुका है।',
+                                                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.5, height: 1.45),
+                                                    ),
+                                                    actions: [
+                                                      ElevatedButton(
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor: AppColors.saffronPrimary,
+                                                          foregroundColor: Colors.white,
+                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                        ),
+                                                        onPressed: () => Navigator.of(ctx).pop(),
+                                                        child: Text(
+                                                          isGujarati ? 'જોવો' : 'देखें',
+                                                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.gold,
+                                            foregroundColor: Colors.black87,
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
+                                          child: Text(
+                                            isGujarati ? 'અનલૉક' : 'अनलॉक',
+                                            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+
+                                  // Expanded Unlocked Transit Guidance & Shubh Timings
+                                  if (_isTomorrowUnlocked) ...[
+                                    const SizedBox(height: 14),
+                                    const Divider(color: Colors.white24, height: 1),
+                                    const SizedBox(height: 12),
+
+                                    // 1. Planetary Transit Status
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withAlpha(50),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: AppColors.gold.withAlpha(70)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.auto_awesome_rounded, color: AppColors.goldLight, size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                isGujarati ? 'ગ્રહ ગોચર સ્થિતિ & નક્ષત્ર ફળ' : 'ग्रह गोचर स्थिति एवं नक्षत्र फल',
+                                                style: GoogleFonts.cinzel(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            isGujarati
+                                                ? 'આવતીકાલે સ્વામી ગ્રહ ${rashi.rulingPlanetGujarati} નો પ્રભાવ અત્યંત અનુકૂળ રહેશે. આત્મવિશ્વાસમાં વૃદ્ધિ થશે, નવા આયોજનો સફળ થશે અને વેપાર-નોકરીમાં લાભના અવસર મળશે.'
+                                                : 'कल स्वामी ग्रह ${rashi.rulingPlanet} का प्रभाव अत्यंत अनुकूल रहेगा। आत्मविश्वास में वृद्धि होगी, नवीन योजनाएं सफल होंगी एवं व्यापार-नौकरी में लाभ के अवसर प्राप्त होंगे।',
+                                            style: isGujarati
+                                                ? GoogleFonts.notoSerifGujarati(fontSize: 12, color: Colors.white.withAlpha(230), height: 1.45)
+                                                : GoogleFonts.notoSerifDevanagari(fontSize: 12, color: Colors.white.withAlpha(230), height: 1.45),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    // 2. Auspicious Choghadiyas for Tomorrow
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withAlpha(50),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: AppColors.gold.withAlpha(70)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.access_time_filled_rounded, color: AppColors.goldLight, size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                isGujarati ? 'આવતીકાલના શ્રેષ્ઠ શુભ ચોઘડિયા' : 'कल के श्रेष्ठ शुभ चौघड़िया',
+                                                style: GoogleFonts.cinzel(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 6,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.saffronPrimary.withAlpha(80),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.goldLight, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  isGujarati ? 'અમૃત: 06:15 - 07:45 AM' : 'अमृत: 06:15 - 07:45 AM',
+                                                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.saffronPrimary.withAlpha(80),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.goldLight, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  isGujarati ? 'શુભ: 09:15 - 10:45 AM' : 'शुभ: 09:15 - 10:45 AM',
+                                                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.saffronPrimary.withAlpha(80),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.goldLight, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  isGujarati ? 'લાભ: 01:45 - 03:15 PM' : 'लाभ: 01:45 - 03:15 PM',
+                                                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    // 3. Vedic Remedy
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withAlpha(50),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: AppColors.gold.withAlpha(70)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.spa_rounded, color: AppColors.goldLight, size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                isGujarati ? 'આવતીકાલનો વિશેષ ઉપાય' : 'कल का विशेष उपाय',
+                                                style: GoogleFonts.cinzel(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            isGujarati
+                                                ? 'પ્રાતઃકાળે સ્નાન કરી ${rashi.deity} ની પૂજા કરવી અને "${rashi.mantra}" નો ૧૧ વખત જાપ કરવો. ગાયને ગોળ અર્પણ કરવાથી કાર્ય સિદ્ધિ મળશે.'
+                                                : 'प्रातःकाल स्नान कर ${rashi.deity} की पूजा करें एवं "${rashi.mantra}" का ११ बार जप करें। गौमाता को गुड़ खिलाने से सर्व कार्य सिद्ध होंगे।',
+                                            style: isGujarati
+                                                ? GoogleFonts.notoSerifGujarati(fontSize: 12, color: Colors.white.withAlpha(230), height: 1.45)
+                                                : GoogleFonts.notoSerifDevanagari(fontSize: 12, color: Colors.white.withAlpha(230), height: 1.45),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
           ),
+
+          // Bottom Banner Ad
+          const AdBannerWidget(),
         ],
       ),
     );
@@ -363,6 +697,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
     RashiInfo rashi,
     RashiReadingModel reading,
     bool isDark,
+    bool isGujarati,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -394,7 +729,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'दैनिक राशिफल / Daily Reading',
+                        isGujarati ? 'દૈનિક રાશિફળ / Daily Reading' : 'दैनिक राशिफल / Daily Reading',
                         style: GoogleFonts.cinzel(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -409,10 +744,13 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
               IconButton(
                 icon: const Icon(Icons.copy_rounded, size: 16),
                 onPressed: () {
-                  final text = '${reading.horoscopeTextHindi ?? ''}\n\n${reading.horoscopeText}';
+                  final regional = reading.getEffectiveHoroscope(isGujarati) ?? '';
+                  final text = '$regional\n\n${reading.horoscopeText}';
                   Clipboard.setData(ClipboardData(text: text));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Reading copied to clipboard')),
+                    SnackBar(
+                      content: Text(isGujarati ? 'રાશિફળ કૉપિ થઈ ગયું' : 'Reading copied to clipboard'),
+                    ),
                   );
                 },
                 padding: EdgeInsets.zero,
@@ -432,10 +770,12 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
 
           const Divider(height: 20),
 
-          // Hindi Guidance
-          if (reading.horoscopeTextHindi != null) ...[
+          // Regional Guidance (Gujarati / Hindi)
+          ...[
             Text(
-              'दैनिक मार्गदर्शन (Hindi Prediction):',
+              isGujarati
+                  ? 'દૈનિક માર્ગદર્શન (ગુજરાતી ભવિષ્યફળ):'
+                  : 'दैनिक मार्गदर्शन (Hindi Prediction):',
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -444,19 +784,25 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
             ),
             const SizedBox(height: 6),
             SelectableText(
-              reading.horoscopeTextHindi!,
-              style: GoogleFonts.notoSerifDevanagari(
-                fontSize: 15,
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                height: 1.6,
-              ),
+              reading.getEffectiveHoroscope(isGujarati) ?? '',
+              style: isGujarati
+                  ? GoogleFonts.notoSerifGujarati(
+                      fontSize: 15,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      height: 1.6,
+                    )
+                  : GoogleFonts.notoSerifDevanagari(
+                      fontSize: 15,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      height: 1.6,
+                    ),
             ),
             const SizedBox(height: 14),
           ],
 
           // English Horoscope
           Text(
-            'Daily Astrological Outlook:',
+            isGujarati ? 'દૈનિક જ્યોતિષ દ્રષ્ટિ (English Outlook):' : 'Daily Astrological Outlook:',
             style: GoogleFonts.outfit(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -481,6 +827,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
     BuildContext context,
     RashiReadingModel reading,
     bool isDark,
+    bool isGujarati,
   ) {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -500,7 +847,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'जीवन के प्रमुख क्षेत्र / Key Life Spheres',
+                  isGujarati ? 'જીવનના મુખ્ય ક્ષેત્રો / Key Life Spheres' : 'जीवन के प्रमुख क्षेत्र / Key Life Spheres',
                   style: GoogleFonts.cinzel(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -514,38 +861,38 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
           const SizedBox(height: 14),
 
           // Career & Finance
-          if (reading.careerOutlookHindi != null)
-            _buildDomainRow(
-              icon: Icons.work_outline_rounded,
-              title: 'कार्यक्षेत्र एवं वित्त (Career & Finance)',
-              textHindi: reading.careerOutlookHindi!,
-              textEn: reading.careerOutlook,
-              isDark: isDark,
-            ),
+          _buildDomainRow(
+            icon: Icons.work_outline_rounded,
+            title: isGujarati ? 'કાર્યક્ષેત્ર અને નાણાં (Career & Finance)' : 'कार्यक्षेत्र एवं वित्त (Career & Finance)',
+            textRegional: reading.getEffectiveCareer(isGujarati) ?? '',
+            textEn: reading.careerOutlook,
+            isDark: isDark,
+            isGujarati: isGujarati,
+          ),
 
           const SizedBox(height: 12),
 
           // Family & Relationships
-          if (reading.loveOutlookHindi != null)
-            _buildDomainRow(
-              icon: Icons.favorite_outline_rounded,
-              title: 'पारिवारिक जीवन (Family & Harmony)',
-              textHindi: reading.loveOutlookHindi!,
-              textEn: reading.loveOutlook,
-              isDark: isDark,
-            ),
+          _buildDomainRow(
+            icon: Icons.favorite_outline_rounded,
+            title: isGujarati ? 'પારિવારિક જીવન (Family & Harmony)' : 'पारिवारिक जीवन (Family & Harmony)',
+            textRegional: reading.getEffectiveLove(isGujarati) ?? '',
+            textEn: reading.loveOutlook,
+            isDark: isDark,
+            isGujarati: isGujarati,
+          ),
 
           const SizedBox(height: 12),
 
           // Health & Well-being
-          if (reading.healthOutlookHindi != null)
-            _buildDomainRow(
-              icon: Icons.spa_outlined,
-              title: 'स्वास्थ्य एवं ऊर्जा (Health & Energy)',
-              textHindi: reading.healthOutlookHindi!,
-              textEn: reading.healthOutlook,
-              isDark: isDark,
-            ),
+          _buildDomainRow(
+            icon: Icons.spa_outlined,
+            title: isGujarati ? 'સ્વાસ્થ્ય અને ઊર્જા (Health & Energy)' : 'स्वास्थ्य एवं ऊर्जा (Health & Energy)',
+            textRegional: reading.getEffectiveHealth(isGujarati) ?? '',
+            textEn: reading.healthOutlook,
+            isDark: isDark,
+            isGujarati: isGujarati,
+          ),
         ],
       ),
     );
@@ -554,9 +901,10 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
   Widget _buildDomainRow({
     required IconData icon,
     required String title,
-    required String textHindi,
+    required String textRegional,
     String? textEn,
     required bool isDark,
+    required bool isGujarati,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -589,12 +937,18 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            textHindi,
-            style: GoogleFonts.notoSerifDevanagari(
-              fontSize: 13,
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              height: 1.4,
-            ),
+            textRegional,
+            style: isGujarati
+                ? GoogleFonts.notoSerifGujarati(
+                    fontSize: 13,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    height: 1.4,
+                  )
+                : GoogleFonts.notoSerifDevanagari(
+                    fontSize: 13,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    height: 1.4,
+                  ),
           ),
           if (textEn != null) ...[
             const SizedBox(height: 4),
@@ -616,6 +970,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
     RashiInfo rashi,
     RashiReadingModel reading,
     bool isDark,
+    bool isGujarati,
   ) {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -630,7 +985,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'शुभ संकेत एवं गुण / Auspicious Attributes',
+            isGujarati ? 'શુભ સંકેત અને ગુણ / Auspicious Attributes' : 'शुभ संकेत एवं गुण / Auspicious Attributes',
             style: GoogleFonts.cinzel(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -642,7 +997,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
             children: [
               Expanded(
                 child: _buildTraitItem(
-                  'भाग्यशाली अंक (Number)',
+                  isGujarati ? 'ભાગ્યશાળી અંક (Number)' : 'भाग्यशाली अंक (Number)',
                   reading.luckyNumber ?? '${rashi.luckyNumber}',
                   Icons.numbers_rounded,
                   isDark,
@@ -651,7 +1006,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildTraitItem(
-                  'शुभ रंग (Color)',
+                  isGujarati ? 'શુભ રંગ (Color)' : 'शुभ रंग (Color)',
                   reading.luckyColor ?? rashi.luckyColor,
                   Icons.palette_rounded,
                   isDark,
@@ -664,8 +1019,8 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
             children: [
               Expanded(
                 child: _buildTraitItem(
-                  'शुभ रत्न (Gemstone)',
-                  reading.luckyGemstone ?? 'माणिक्य (Ruby)',
+                  isGujarati ? 'શુભ રત્ન (Gemstone)' : 'शुभ रत्न (Gemstone)',
+                  reading.getEffectiveLuckyGemstone(isGujarati),
                   Icons.diamond_rounded,
                   isDark,
                 ),
@@ -673,8 +1028,8 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildTraitItem(
-                  'शुभ दिशा (Direction)',
-                  reading.luckyDirection ?? 'उत्तर (North)',
+                  isGujarati ? 'શુભ દિશા (Direction)' : 'शुभ दिशा (Direction)',
+                  reading.getEffectiveLuckyDirection(isGujarati),
                   Icons.explore_rounded,
                   isDark,
                 ),
@@ -686,8 +1041,8 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
             children: [
               Expanded(
                 child: _buildTraitItem(
-                  'तत्व (Element)',
-                  rashi.element,
+                  isGujarati ? 'તત્વ (Element)' : 'तत्व (Element)',
+                  isGujarati ? rashi.elementGujarati : rashi.element,
                   Icons.local_fire_department_rounded,
                   isDark,
                 ),
@@ -695,8 +1050,8 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildTraitItem(
-                  'अनुकूल राशि (Match)',
-                  reading.compatibility ?? 'कर्क, मीन',
+                  isGujarati ? 'અનુકૂળ રાશિ (Match)' : 'अनुकूल राशि (Match)',
+                  reading.getEffectiveCompatibility(isGujarati),
                   Icons.favorite_rounded,
                   isDark,
                 ),
@@ -753,7 +1108,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
     );
   }
 
-  Widget _buildMantraCard(BuildContext context, RashiInfo rashi, bool isDark) {
+  Widget _buildMantraCard(BuildContext context, RashiInfo rashi, bool isDark, bool isGujarati) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -774,7 +1129,7 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
                   const Icon(Icons.self_improvement_rounded, color: AppColors.gold, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'ईष्टदेव एवं राशीय महामंत्र',
+                    isGujarati ? 'ઇષ્ટદેવ અને રાશિ મહામંત્ર' : 'ईष्टदेव एवं राशीय महामंत्र',
                     style: GoogleFonts.cinzel(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -787,53 +1142,53 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
                 IconButton(
                   icon: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.goldLight),
                   onPressed: () => setState(() => _chantCount = 0),
-                  tooltip: 'Reset Mala Counter',
+                  tooltip: isGujarati ? 'માળા કાઉન્ટર રીસેટ' : 'Reset Mala Counter',
                 ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            'आराध्य देव: ${rashi.deity}',
-            style: GoogleFonts.notoSerifDevanagari(
-              fontSize: 13,
-              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-            ),
+            isGujarati ? 'આરાધ્ય દેવ: ${rashi.deity}' : 'आराध्य देव: ${rashi.deity}',
+            style: isGujarati
+                ? GoogleFonts.notoSerifGujarati(
+                    fontSize: 13,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  )
+                : GoogleFonts.notoSerifDevanagari(
+                    fontSize: 13,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  ),
           ),
           const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : AppColors.bgLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.gold.withAlpha(isDark ? 50 : 80),
+          InkWell(
+            onTap: () => _openMantraJapaScreen(rashi),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : AppColors.bgLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.gold.withAlpha(isDark ? 50 : 80),
+                ),
               ),
-            ),
-            child: SelectableText(
-              rashi.mantra,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.notoSerifDevanagari(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+              child: SelectableText(
+                rashi.mantra,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.notoSerifDevanagari(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 14),
 
-          // Interactive Japa Mala Counter (108 chants)
+          // Interactive Japa Mala Counter (108 chants) -> opens full screen Japa Mala
           InkWell(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() {
-                if (_chantCount < 108) {
-                  _chantCount++;
-                } else {
-                  _chantCount = 1;
-                }
-              });
-            },
+            onTap: () => _openMantraJapaScreen(rashi),
             borderRadius: BorderRadius.circular(14),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -849,12 +1204,18 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
                       const Icon(Icons.touch_app_rounded, size: 18, color: AppColors.goldLight),
                       const SizedBox(width: 8),
                       Text(
-                        'मंत्र जप माला (Tap to Chant):',
-                        style: GoogleFonts.notoSerifDevanagari(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        isGujarati ? 'મંત્ર જાપ માળા (સ્પર્શ કરીને જાપ કરો):' : 'मंत्र जप माला (Tap to Chant):',
+                        style: isGujarati
+                            ? GoogleFonts.notoSerifGujarati(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              )
+                            : GoogleFonts.notoSerifDevanagari(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                       ),
                     ],
                   ),
@@ -880,5 +1241,23 @@ class _RashiDetailScreenState extends State<RashiDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openMantraJapaScreen(RashiInfo rashi) async {
+    HapticFeedback.lightImpact();
+    final result = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MantraJapaScreen(
+          rashi: rashi,
+          initialCount: _chantCount,
+        ),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _chantCount = result;
+      });
+    }
   }
 }

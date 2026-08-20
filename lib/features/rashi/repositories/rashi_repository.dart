@@ -50,12 +50,16 @@ class RashiRepository {
             zodiacSign: rashi.zodiacParam,
             horoscopeText: horoscopeText.isNotEmpty ? horoscopeText : generated.horoscopeText,
             horoscopeTextHindi: generated.horoscopeTextHindi,
+            horoscopeTextGujarati: generated.horoscopeTextGujarati,
             careerOutlook: generated.careerOutlook,
             careerOutlookHindi: generated.careerOutlookHindi,
+            careerOutlookGujarati: generated.careerOutlookGujarati,
             loveOutlook: generated.loveOutlook,
             loveOutlookHindi: generated.loveOutlookHindi,
+            loveOutlookGujarati: generated.loveOutlookGujarati,
             healthOutlook: generated.healthOutlook,
             healthOutlookHindi: generated.healthOutlookHindi,
+            healthOutlookGujarati: generated.healthOutlookGujarati,
             mood: generated.mood,
             compatibility: generated.compatibility,
             luckyTime: generated.luckyTime,
@@ -105,6 +109,16 @@ class RashiRepository {
       'आज मन शांत और आध्यात्मिक ऊर्जा से परिपूर्ण रहेगा। नए संपर्क स्थापित होंगे जो भविष्य में लाभकारी सिद्ध होंगे। ईष्टदेव की आराधना से हर बाधा दूर होगी।',
     ];
 
+    final gujaratiPredictions = [
+      'આજે ${rashi.gujaratiName} રાશિના જાતકો માટે દિવસ અત્યંત શુભ અને સકારાત્મક રહેવાનો છે. ${rashi.rulingPlanetGujarati} ની કૃપાથી તમારા આત્મવિશ્વાસમાં વધારો થશે. કાર્યક્ષેત્રમાં નવી ઉત્તમ તકો પ્રાપ્ત થશે તેમજ પારિવારિક વાતાવરણ સુખદ અને આનંદમય રહેશે. \'${rashi.mantra}\' મંત્રનો જાપ કરવો કલ્યાણકારી નીવડશે.',
+      'આજનો દિવસ ધીરજ અને વિવેકથી નિર્ણયો લેવાનો છે. તમારા સ્વામી ગ્રહની સ્થિતિ અનુકૂળ છે. આર્થિક બાબતોમાં પ્રગતિ થશે અને સ્નેહીજનોનો ઉત્તમ સહયોગ મળશે. સાત્વિક વિચારો અને કર્તવ્યનિષ્ઠાથી તમામ કાર્યો સિદ્ધ થશે.',
+      'આજે જ્ઞાનાર્જન અને રચનાત્મક કાર્યોમાં વિશેષ સફળતાના યોગ છે. ઈશ્વર આરાધનાથી માનસિક શાંતિ મળશે. વાણીમાં નમ્રતા અને મધુરતા જાળવો. સ્વાસ્થ્ય ઉત્તમ રહેશે અને માન-સન્માનમાં વધારો થશે.',
+      'આજે શરીરમાં ઉત્સાહ અને પરાક્રમનો સંચાર થશે. અટકેલા કાર્યોને નવી ગતિ મળશે. વેપાર અને નોકરીમાં નવી ઉજ્જવળ સંભાવનાઓ સર્જાશે. ઇષ્ટદેવના સ્મરણથી દિવસ વધુ ફળદાયી રહેશે.',
+      'આજે સંતુલન અને આત્મનિરીક્ષણનું વિશેષ મહત્વ રહેશે. કોઈ પણ મહત્વપૂર્ણ કાર્યમાં વડીલોનું માર્ગદર્શન અવશ્ય લેવું. ધાર્મિક કાર્યોમાં રુચિ વધશે અને મન પ્રસન્ન રહેશે.',
+      'આજે સામાજિક પ્રતિષ્ઠા તેમજ મિત્રોના સહયોગના ઉત્તમ યોગ છે. વ્યવસાયિક યાત્રાઓ લાભદાયી નીવડશે. પરિવારમાં કોઈ માંગલિક કાર્યનું આયોજન થઈ શકે છે.',
+      'આજે મન શાંત અને આધ્યાત્મિક ઊર્જાથી પરિપૂર્ણ રહેશે. નવા સંપર્કો સ્થાપિત થશે જે ભવિષ્યમાં અત્યંત લાભકારી સાબિત થશે. ઇષ્ટદેવની આરાધનાથી સર્વ વિઘ્નો દૂર થશે.',
+    ];
+
     final careerEn = [
       'New professional opportunities align favorably. Stay proactive and collaborative.',
       'Concentrate on finishing pending tasks before taking up new commitments.',
@@ -123,6 +137,16 @@ class RashiRepository {
       'व्यापार में नए अनुबंध और लाभ के अवसर उत्पन्न होंगे।',
       'अधिकारियों का पूर्ण सहयोग प्राप्त होगा। निर्णय क्षमता की सराहना होगी।',
       'योजनाबद्ध तरीके से किया गया कार्य अप्रत्याशित सफलता दिलाएगा।',
+    ];
+
+    final careerGu = [
+      'કાર્યક્ષેત્રમાં નવી મહત્વપૂર્ણ જવાબદારીઓ અને પદોન્નતિના શુભ યોગ છે.',
+      'અટકેલા નાણાં પાછા મળશે. વ્યાપારી ભાગીદારો સાથે સંબંધો વધુ ગાઢ બનશે.',
+      'નાણાકીય રોકાણમાં વિવેક રાખવો. અગાઉ કરેલા કાર્યોનું શ્રેષ્ઠ ફળ મળશે.',
+      'નોકરી કરતા જાતકો માટે આજનો દિવસ વિશેષ સિદ્ધિઓથી ભરપૂર રહેશે.',
+      'વેપાર-ધંધામાં નવા કરાર અને આર્થિક લાભની ઉત્તમ તકો સર્જાશે.',
+      'ઉચ્ચ અધિકારીઓનો સંપૂર્ણ સહયોગ મળશે. નિર્ણયશક્તિની પ્રશંસા થશે.',
+      'યોજનાબદ્ધ રીતે કરેલું કાર્ય અનપેક્ષિત ઉત્કૃષ્ટ સફળતા અપાવશે.',
     ];
 
     final loveEn = [
@@ -145,6 +169,16 @@ class RashiRepository {
       'रिश्तेदारों और प्रियजनों का स्नेहपूर्ण सहयोग मिलेगा।',
     ];
 
+    final loveGu = [
+      'પારિવારિક જીવનમાં સુખ-શાંતિ જળવાશે અને પરસ્પર સ્નેહભાવ વધશે.',
+      'જીવનસાથીનો પૂર્ણ સહયોગ અને ભાવનાત્મક હુંફ પ્રાપ્ત થશે.',
+      'ઘરમાં સ્વજનો સાથે આનંદદાયક અને સુમેળભર્યો સમય પસાર થશે.',
+      'ખુલ્લા સંવાદથી ગેરસમજ દૂર થશે અને પારિવારિક સંબંધો મજબૂત બનશે.',
+      'સંતાન પક્ષ તરફથી શુભ અને આનંદદાયક સમાચાર મળવાના પ્રબળ યોગ છે.',
+      'દાંપત્ય જીવનમાં મધુરતા અને પરસ્પર વિશ્વાસમાં ઉત્તરોત્તર વૃદ્ધિ થશે.',
+      'સ્નેહીજનો અને સગાં-સંબંધીઓનો સ્નેહપૂર્ણ સહયોગ મળશે.',
+    ];
+
     final healthEn = [
       'Energy levels remain high. Maintain balanced hydration and sattvic diet.',
       'Gentle yoga and mindful breathing enhance mental clarity.',
@@ -165,6 +199,16 @@ class RashiRepository {
       'शारीरिक और मानसिक रूप से ताजगी और प्रसन्नता का अनुभव होगा।',
     ];
 
+    final healthGu = [
+      'સ્વાસ્થ્ય ઉત્તમ રહેશે. યોગ અને પ્રાણાયામથી મનમાં સ્ફૂર્તિ જળવાશે.',
+      'આહારમાં સાત્વિકતા જાળવવી. મોસમી બીમારીઓથી રક્ષણ મળશે.',
+      'માનસિક શાંતિ માટે ૧૦ મિનિટનું ધ્યાન વિશેષ ફળદાયી નીવડશે.',
+      'આખો દિવસ ઊર્જાનું સ્તર ઊંચું રહેશે. નિયમિત દિનચર્યાનું પાલન કરો.',
+      'હળવી કસરત અને સવારના ભ્રમણથી તંદુરસ્તીમાં સુધારો થશે.',
+      'પૂરતું પાણી પીવું અને તણાવમુક્ત રહેવાનો સુંદર પ્રયાસ કરવો.',
+      'શારીરિક અને માનસિક રીતે તાજગી અને પ્રસન્નતાનો અનુભવ થશે.',
+    ];
+
     final gemstones = [
       'माणिक्य (Ruby)', 'मोती (Pearl)', 'मूंगा (Red Coral)', 'पन्ना (Emerald)',
       'पुखराज (Yellow Sapphire)', 'हीरा (Diamond)', 'नीलम (Blue Sapphire)',
@@ -182,12 +226,16 @@ class RashiRepository {
       zodiacSign: rashi.zodiacParam,
       horoscopeText: englishPredictions[cycleIndex],
       horoscopeTextHindi: hindiPredictions[cycleIndex],
+      horoscopeTextGujarati: gujaratiPredictions[cycleIndex],
       careerOutlook: careerEn[cycleIndex],
       careerOutlookHindi: careerHi[cycleIndex],
+      careerOutlookGujarati: careerGu[cycleIndex],
       loveOutlook: loveEn[cycleIndex],
       loveOutlookHindi: loveHi[cycleIndex],
+      loveOutlookGujarati: loveGu[cycleIndex],
       healthOutlook: healthEn[cycleIndex],
       healthOutlookHindi: healthHi[cycleIndex],
+      healthOutlookGujarati: healthGu[cycleIndex],
       mood: weekday % 2 == 0 ? 'Peaceful & Harmonious' : 'Energetic & Confident',
       compatibility: _getCompatibleRashi(rashi),
       luckyTime: _getLuckyTime(rashi, daySeed),

@@ -49,7 +49,7 @@ void main() {
     expect(find.text('Rashi'), findsOneWidget);
   });
 
-  testWidgets('SpiritualSplashScreen renders sacred Om and title', (WidgetTester tester) async {
+  testWidgets('SpiritualSplashScreen renders sacred Om, motto, and logo', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.darkTheme(),
@@ -58,11 +58,8 @@ void main() {
     );
 
     // Initial frame check
-    expect(find.text('॥ सनातन दृष्टि ॥'), findsOneWidget);
     expect(find.text('॥ ॐ नमो भगवते वासुदेवाय ॥'), findsOneWidget);
     expect(find.text('॥ यतो धर्मस्ततो जयः ॥'), findsOneWidget);
-
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('पञ्चाङ्ग  •  गीता  •  कुण्डली  •  राशि'), findsOneWidget);
+    expect(find.byType(Image), findsOneWidget);
   });
 }

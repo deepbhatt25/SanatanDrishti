@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/config/api_config.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/language_provider.dart';
+import 'core/services/ad_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/location_service.dart';
 import 'core/services/storage_service.dart';
@@ -24,6 +25,9 @@ import 'features/splash/screens/spiritual_splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Google Mobile Ads SDK (AdMob)
+  await AdService.instance.initialize();
 
   // Set preferred orientation
   await SystemChrome.setPreferredOrientations([

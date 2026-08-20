@@ -5,6 +5,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/chapter_metadata.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
+import '../../../core/widgets/ad_native_card.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../models/chapter_model.dart';
 import '../providers/geeta_provider.dart';
@@ -57,187 +59,248 @@ class ChaptersScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // Last Read Banner
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.maroonPrimary.withAlpha(50),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
+      body: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                // Last Read Banner
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.gold.withAlpha(50),
-                      border: Border.all(color: AppColors.goldLight, width: 1),
+                      gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.maroonPrimary.withAlpha(50),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.auto_stories_rounded,
-                      color: AppColors.goldLight,
-                      size: 24,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.gold.withAlpha(50),
+                            border: Border.all(color: AppColors.goldLight, width: 1),
+                          ),
+                          child: const Icon(
+                            Icons.auto_stories_rounded,
+                            color: AppColors.goldLight,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    isGujarati ? 'વાચન ચાલુ રાખો' : 'CONTINUE READING',
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.goldLight,
+                                            letterSpacing: 0.8,
+                                          )
+                                        : GoogleFonts.outfit(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.goldLight,
+                                            letterSpacing: 1.1,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                isGujarati
+                                    ? 'અધ્યાય ${langProvider.formatNumber(lastChapterNum)} • શ્લોક ${langProvider.formatNumber(lastVerseNum)}'
+                                    : 'अध्याय $lastChapterNum • श्लोक $lastVerseNum',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      )
+                                    : GoogleFonts.notoSerifDevanagari(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                              ),
+                              Text(
+                                isGujarati ? lastChapterMeta.nameGujarati : lastChapterMeta.nameHindi,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.goldLight, size: 36),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => VerseDetailScreen(
+                                  chapterNumber: lastChapterNum,
+                                  initialVerseNumber: lastVerseNum,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
+                ),
+
+                // Daily Divine Wisdom Card
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                      ),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
+                            const Icon(Icons.wb_sunny_rounded, color: AppColors.gold, size: 18),
+                            const SizedBox(width: 8),
                             Text(
-                              isGujarati ? 'વાચન ચાલુ રાખો' : 'CONTINUE READING',
+                              isGujarati ? 'આજનું દિવ્ય જ્ઞાન' : 'आज का दिव्य ज्ञान',
                               style: isGujarati
                                   ? GoogleFonts.notoSerifGujarati(
-                                      fontSize: 11,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.goldLight,
-                                      letterSpacing: 0.8,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
                                     )
-                                  : GoogleFonts.outfit(
-                                      fontSize: 11,
+                                  : GoogleFonts.notoSerifDevanagari(
+                                      fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.goldLight,
-                                      letterSpacing: 1.1,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
                                     ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 8),
                         Text(
                           isGujarati
-                              ? 'અધ્યાય ${langProvider.formatNumber(lastChapterNum)}, શ્લોક ${langProvider.formatNumber(lastVerseNum)}'
-                              : 'अध्याय $lastChapterNum, श्लोक $lastVerseNum',
-                          style: isGujarati
-                              ? GoogleFonts.notoSerifGujarati(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                )
-                              : GoogleFonts.notoSerifDevanagari(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                        ),
-                        Text(
-                          isGujarati ? lastChapterMeta.nameGujarati : lastChapterMeta.nameEnglish,
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: Colors.white.withAlpha(210),
+                              ? 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nમા ફલેષુ કદાચન, મા કર્મફલહેતુર્ભૂર્મા તે સંગોડસ્ત્વકર્મણિ॥'
+                              : 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥',
+                          style: GoogleFonts.notoSerifDevanagari(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      geetaProvider.selectVerse(lastChapterNum, lastVerseNum);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => VerseDetailScreen(
-                            chapterNumber: lastChapterNum,
-                            initialVerseNumber: lastVerseNum,
-                          ),
+                ),
+
+                // Chapters List Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isGujarati ? 'બધા ૧૮ અધ્યાય' : 'सभी १८ अध्याय',
+                          style: isGujarati
+                              ? GoogleFonts.notoSerifGujarati(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                )
+                              : GoogleFonts.notoSerifDevanagari(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: Text(
-                      isGujarati ? 'વાંચો' : 'Read',
-                      style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
+                        Text(
+                          isGujarati ? '૭૦૦ શ્લોક' : '७०० श्लोक',
+                          style: isGujarati
+                              ? GoogleFonts.notoSerifGujarati(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                )
+                              : GoogleFonts.notoSerifDevanagari(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // Chapters List with Integrated Native Ads
+                SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final chapter = chapters[index];
+                        final item = _ChapterListItem(
+                          chapter: chapter,
+                          isGujarati: isGujarati,
+                          langProvider: langProvider,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChapterDetailScreen(chapter: chapter),
+                              ),
+                            );
+                          },
+                        );
+
+                        // Insert Native Ad after Chapter 6 and Chapter 12
+                        if (chapter.chapterNumber == 6 || chapter.chapterNumber == 12) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              item,
+                              const AdNativeCard(),
+                            ],
+                          );
+                        }
+
+                        return item;
+                      },
+                      childCount: chapters.length,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Header Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isGujarati ? 'અધ્યાય સૂચિ (૧૮ અધ્યાયો)' : 'अध्याय सूची (18 Chapters)',
-                    style: isGujarati
-                        ? GoogleFonts.notoSerifGujarati(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                          )
-                        : GoogleFonts.cinzel(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                          ),
-                  ),
-                  Text(
-                    isGujarati ? '૭૦૦ શ્લોક' : '700 श्लोक',
-                    style: isGujarati
-                        ? GoogleFonts.notoSerifGujarati(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                          )
-                        : GoogleFonts.notoSerifDevanagari(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Chapters List
-          SliverPadding(
-            padding: const EdgeInsets.only(bottom: 24),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final chapter = chapters[index];
-                  return _ChapterListItem(
-                    chapter: chapter,
-                    isGujarati: isGujarati,
-                    langProvider: langProvider,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChapterDetailScreen(chapter: chapter),
-                        ),
-                      );
-                    },
-                  );
-                },
-                childCount: chapters.length,
-              ),
-            ),
-          ),
+          // Bottom Banner Ad
+          const AdBannerWidget(),
         ],
       ),
     );

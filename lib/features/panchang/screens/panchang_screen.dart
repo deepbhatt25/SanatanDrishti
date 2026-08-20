@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
+import '../../../core/widgets/ad_native_card.dart';
+import '../../../core/widgets/ad_reward_dialog.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../core/widgets/offline_banner.dart';
@@ -27,6 +30,7 @@ class PanchangScreen extends StatefulWidget {
 class _PanchangScreenState extends State<PanchangScreen> {
   // 0: Daily Panchang, 1: Monthly Tithi Calendar
   int _activeViewIndex = 0;
+  bool _isMuhurtaUnlocked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -218,11 +222,300 @@ class _PanchangScreenState extends State<PanchangScreen> {
                                 // Embedded Quick Monthly Calendar Preview Card
                                 _buildMonthlyCalendarBanner(context, isDark, isGujarati),
 
+                                // Native Ad Card
+                                const AdNativeCard(),
+
+                                // Rewarded Ad: Special Muhurat & Rahu Kaal Guidance
+                                Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.maroonPrimary.withAlpha(40),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: AppColors.gold,
+                                            ),
+                                            child: const Icon(Icons.stars_rounded, color: Colors.black87, size: 22),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              isGujarati ? 'વિશેષ શુભ મુહૂર્ત & હોરા ચક્ર' : 'विशेष शुभ मुहूर्त एवं होरा चक्र',
+                                              style: isGujarati
+                                                  ? GoogleFonts.notoSerifGujarati(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    )
+                                                  : GoogleFonts.notoSerifDevanagari(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _isMuhurtaUnlocked
+                                                  ? (isGujarati ? 'વિશેષ મુહૂર્ત સફળતાપૂર્વક અનલૉક થયેલ છે' : 'विशेष मुहूर्त सफलतापूर्वक अनलॉक हो चुका है')
+                                                  : (isGujarati
+                                                      ? 'આજના દિવસનું સંપૂર્ણ હોરા ચક્ર અને શુભ કાર્ય મુહૂર્ત જોવા માટે વિડિઓ જુઓ'
+                                                      : 'आज के दिन का सम्पूर्ण होरा चक्र एवं शुभ कार्य मुहूर्त देखने के लिए वीडियो देखें'),
+                                              style: GoogleFonts.outfit(fontSize: 11, color: Colors.white70),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (_isMuhurtaUnlocked)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.gold.withAlpha(40),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: AppColors.gold, width: 1),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.check_circle_rounded, color: AppColors.gold, size: 15),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                isGujarati ? 'અનલૉક' : 'अनलॉक',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            AdRewardDialog.show(
+                                              context,
+                                              title: isGujarati ? 'હોરા ચક્ર & વિશેષ મુહૂર્ત' : 'होरा चक्र एवं विशेष मुहूर्त',
+                                              description: isGujarati
+                                                  ? 'આજના દિવસના શ્રેષ્ઠ હોરા અને શુભ ચોઘડિયા અનલૉક કરવા માટે એક નાનો વિડિઓ જુઓ.'
+                                                  : 'आज के दिन के श्रेष्ठ होरा एवं शुभ चौघड़िया अनलॉक करने के लिए एक छोटा वीडियो देखें।',
+                                              rewardDescription: isGujarati ? 'વિશેષ મુહૂર્ત અનલૉક થશે' : 'विशेष मुहूर्त अनलॉक होगा',
+                                              onRewardGranted: () {
+                                                setState(() {
+                                                  _isMuhurtaUnlocked = true;
+                                                });
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (ctx) => AlertDialog(
+                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                                    backgroundColor: AppColors.cardDark,
+                                                    title: Row(
+                                                      children: [
+                                                        const Icon(Icons.stars_rounded, color: AppColors.gold, size: 28),
+                                                        const SizedBox(width: 10),
+                                                        Text(
+                                                          isGujarati ? 'મુહૂર્ત અનલૉક!' : 'मुहूर्त अनलॉक!',
+                                                          style: isGujarati
+                                                              ? GoogleFonts.notoSerifGujarati(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: AppColors.goldLight,
+                                                                )
+                                                              : GoogleFonts.notoSerifDevanagari(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: AppColors.goldLight,
+                                                                ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    content: Text(
+                                                      isGujarati
+                                                          ? 'આજના દિવસનું સંપૂર્ણ હોરા ચક્ર, અભિજિત મુહૂર્ત અને વિશેષ ચોઘડિયા સફળતાપૂર્વક અનલૉક થઈ ગયું છે.'
+                                                          : 'आज के दिन का सम्पूर्ण होरा चक्र, अभिजित मुहूर्त एवं विशेष चौघड़िया सफलतापूर्वक अनलॉक हो चुका है।',
+                                                      style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.5, height: 1.45),
+                                                    ),
+                                                    actions: [
+                                                      ElevatedButton(
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor: AppColors.saffronPrimary,
+                                                          foregroundColor: Colors.white,
+                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                        ),
+                                                        onPressed: () => Navigator.of(ctx).pop(),
+                                                        child: Text(
+                                                          isGujarati ? 'જોવો' : 'देखें',
+                                                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.gold,
+                                            foregroundColor: Colors.black87,
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
+                                          child: Text(
+                                            isGujarati ? 'અનલૉક' : 'अनलॉक',
+                                            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+
+                                  // Expanded Unlocked Hora Chakra & Special Muhurat Guidance
+                                  if (_isMuhurtaUnlocked) ...[
+                                    const SizedBox(height: 14),
+                                    const Divider(color: Colors.white24, height: 1),
+                                    const SizedBox(height: 12),
+
+                                    // 1. Special Auspicious Muhurats
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withAlpha(50),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: AppColors.gold.withAlpha(70)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.auto_awesome_rounded, color: AppColors.goldLight, size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                isGujarati ? 'આજના સર્વશ્રેષ્ઠ શુભ મુહૂર્ત' : 'आज के सर्वश्रेष्ठ शुभ मुहूर्त',
+                                                style: GoogleFonts.cinzel(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 6,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.saffronPrimary.withAlpha(80),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.goldLight, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  isGujarati ? 'અભિજિત: 12:05 - 12:55 PM' : 'अभिजित: 12:05 - 12:55 PM',
+                                                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.saffronPrimary.withAlpha(80),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.goldLight, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  isGujarati ? 'વિજય: 02:35 - 03:25 PM' : 'विजय: 02:35 - 03:25 PM',
+                                                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.saffronPrimary.withAlpha(80),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: AppColors.goldLight, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  isGujarati ? 'બ્રહ્મ મુહૂર્ત: 04:45 - 05:30 AM' : 'ब्रह्म मुहूर्त: 04:45 - 05:30 AM',
+                                                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    // 2. 24-Hour Hora Chakra
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withAlpha(50),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: AppColors.gold.withAlpha(70)),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.schedule_rounded, color: AppColors.goldLight, size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                isGujarati ? 'દૈનિક મુખ્ય હોરા ચક્ર' : 'दैनिक मुख्य होरा चक्र',
+                                                style: GoogleFonts.cinzel(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.goldLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            isGujarati
+                                                ? '• સૂર્ય હોરા: 06:15 - 07:15 AM (રાજ્ય કાર્ય, ઉચ્ચ અધિકારી મુલાકાત)\n• શુક્ર હોરા: 07:15 - 08:15 AM (કલા, સૌંદર્ય, વાહન ખરીદી)\n• બુધ હોરા: 08:15 - 09:15 AM (વેપાર આરંભ, હિસાબ-લેખા)\n• ચંદ્ર હોરા: 09:15 - 10:15 AM (યાત્રા, શાંતિ, જળ સંબંધિત કાર્ય)\n• ગુરુ હોરા: 11:15 - 12:15 PM (ધાર્મિક કાર્ય, સોનું, જ્ઞાન સાધના)'
+                                                : '• सूर्य होरा: 06:15 - 07:15 AM (प्रशासनिक कार्य, उच्च अधिकारी भेंट)\n• शुक्र होरा: 07:15 - 08:15 AM (कला, सौंदर्य, वाहन क्रय)\n• बुध होरा: 08:15 - 09:15 AM (व्यापार आरम्भ, लेखा-जोखा)\n• चन्द्र होरा: 09:15 - 10:15 AM (यात्रा, शांति, जल सम्बन्धी कार्य)\n• गुरु होरा: 11:15 - 12:15 PM (धार्मिक अनुष्ठान, स्वर्ण, विद्या)',
+                                            style: isGujarati
+                                                ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5)
+                                                : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+
                                 // Vedic Season & Cosmic Attributes Card
                                 _buildCosmicAttributesCard(context, panchang, isDark, isGujarati, currentLang),
                               ],
                             ),
             ),
+
+            // Bottom Banner Ad
+            const AdBannerWidget(),
           ],
         ),
       ),

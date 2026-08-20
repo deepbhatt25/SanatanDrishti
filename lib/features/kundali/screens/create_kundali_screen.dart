@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/services/ad_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../models/kundali_model.dart';
 import '../providers/kundali_provider.dart';
@@ -62,11 +64,17 @@ class _CreateKundaliScreenState extends State<CreateKundaliScreen> {
     if (!mounted) return;
 
     if (result != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => KundaliPreviewScreen(kundali: result),
-        ),
+      AdService.instance.showInterstitialAd(
+        onDismissed: () {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => KundaliPreviewScreen(kundali: result),
+              ),
+            );
+          }
+        },
       );
     } else if (kundaliProvider.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -375,13 +383,16 @@ class _CreateKundaliScreenState extends State<CreateKundaliScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
               // Sacred Header Banner
               Container(
                 padding: const EdgeInsets.all(16),
@@ -680,6 +691,12 @@ class _CreateKundaliScreenState extends State<CreateKundaliScreen> {
           ),
         ),
       ),
+    ),
+
+    // Bottom Banner Ad
+    const AdBannerWidget(),
+  ],
+),
     );
   }
 

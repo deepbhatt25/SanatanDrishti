@@ -131,5 +131,82 @@ void main() {
       );
       expect(leap.totalDays, 29);
     });
+
+    test('October 2026 has Sarvapitri Amavasya, Navratri, Dussehra, Sharad Purnima, and NO duplicate Diwali', () {
+      final octCalendar = MonthTithiCalendarData.generateMonthCalendar(
+        year: 2026,
+        month: 10,
+        city: city,
+      );
+
+      // 10 Oct is Sarvapitri Amavasya (Bhadrapada Vad Amavasya)
+      final oct10 = octCalendar.days.firstWhere((d) => d.day == 10);
+      expect(oct10.isAmavasya, true);
+      expect(oct10.festivalGu?.contains('સર્વપિતૃ અમાસ'), true);
+      expect(oct10.festivalGu?.contains('દિવાળી'), false);
+
+      // October MUST NOT contain Diwali, Dhanteras, Kali Chaudas, or Bestu Varas
+      final octHasDiwali = octCalendar.days.any((d) =>
+          (d.festivalGu?.contains('દીપાવલી') ?? false) ||
+          (d.shortFestivalGu?.contains('દિવાળી') ?? false) ||
+          (d.festivalGu?.contains('ધનતેરસ') ?? false) ||
+          (d.festivalGu?.contains('બેસતું વર્ષ') ?? false));
+      expect(octHasDiwali, false);
+
+      // 11 Oct is Navratri Prarambh
+      final oct11 = octCalendar.days.firstWhere((d) => d.day == 11);
+      expect(oct11.isShukla, true);
+      expect(oct11.tithiNumberInPaksha, 1);
+      expect(oct11.festivalGu?.contains('નવરાત્રી'), true);
+
+      // 21 Oct is Dussehra
+      final oct21 = octCalendar.days.firstWhere((d) => d.day == 21);
+      expect(oct21.isShukla, true);
+      expect(oct21.tithiNumberInPaksha, 10);
+      expect(oct21.festivalGu?.contains('દશેરા'), true);
+
+      // 26 Oct is Sharad Purnima
+      final oct26 = octCalendar.days.firstWhere((d) => d.day == 26);
+      expect(oct26.isPurnima, true);
+      expect(oct26.festivalGu?.contains('શરદ પૂનમ'), true);
+    });
+
+    test('November 2026 has Dhanteras, Kali Chaudas, Diwali (9 Nov), Bestu Varas, Labh Pancham, and Dev Diwali', () {
+      final novCalendar = MonthTithiCalendarData.generateMonthCalendar(
+        year: 2026,
+        month: 11,
+        city: city,
+      );
+
+      // 7 Nov is Dhanteras
+      final nov7 = novCalendar.days.firstWhere((d) => d.day == 7);
+      expect(nov7.festivalGu?.contains('ધનતેરસ'), true);
+
+      // 8 Nov is Kali Chaudas
+      final nov8 = novCalendar.days.firstWhere((d) => d.day == 8);
+      expect(nov8.festivalGu?.contains('કાળી ચૌદશ'), true);
+
+      // 9 Nov is Diwali (Aso Vad Amavasya)
+      final nov9 = novCalendar.days.firstWhere((d) => d.day == 9);
+      expect(nov9.isAmavasya, true);
+      expect((nov9.festivalGu?.contains('દીપાવલી') ?? false) || (nov9.festivalGu?.contains('લક્ષ્મી પૂજન') ?? false), true);
+
+      // 10 Nov is Bestu Varas (Kartak Sud 1)
+      final nov10 = novCalendar.days.firstWhere((d) => d.day == 10);
+      expect(nov10.isShukla, true);
+      expect(nov10.tithiNumberInPaksha, 1);
+      expect(nov10.festivalGu?.contains('બેસતું વર્ષ'), true);
+
+      // 14 Nov is Labh Pancham (Kartak Sud 5)
+      final nov14 = novCalendar.days.firstWhere((d) => d.day == 14);
+      expect(nov14.isShukla, true);
+      expect(nov14.tithiNumberInPaksha, 5);
+      expect(nov14.festivalGu?.contains('લાભ પાંચમ'), true);
+
+      // 24 Nov is Dev Diwali (Kartak Purnima)
+      final nov24 = novCalendar.days.firstWhere((d) => d.day == 24);
+      expect(nov24.isPurnima, true);
+      expect(nov24.festivalGu?.contains('દેવ દિવાળી'), true);
+    });
   });
 }

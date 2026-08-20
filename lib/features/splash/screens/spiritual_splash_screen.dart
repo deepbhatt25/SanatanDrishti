@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/ad_service.dart';
 import '../../shell/screens/main_shell_screen.dart';
 
 class SpiritualSplashScreen extends StatefulWidget {
@@ -70,6 +71,11 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
         },
       ),
     );
+
+    // Show App Open Ad after smooth transition to main screen
+    Future.delayed(const Duration(milliseconds: 800), () {
+      AdService.instance.showAppOpenAdIfAvailable(force: true);
+    });
   }
 
   @override
@@ -89,13 +95,15 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: RadialGradient(
-              center: Alignment(0.0, -0.2),
-              radius: 1.25,
+              center: Alignment(0.0, -0.05),
+              radius: 1.45,
               colors: [
-                Color(0xFF4A0E0E),
-                Color(0xFF240606),
-                Color(0xFF120303),
+                Color(0xFF5E1212),
+                Color(0xFF380808),
+                Color(0xFF1C0303),
+                Color(0xFF0D0101),
               ],
+              stops: [0.0, 0.45, 0.78, 1.0],
             ),
           ),
           child: SafeArea(
@@ -107,7 +115,7 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
                   children: [
                     // Top Sacred Invocation
                     Padding(
-                      padding: const EdgeInsets.only(top: 40.0),
+                      padding: const EdgeInsets.only(top: 36.0),
                       child: Opacity(
                         opacity: _fadeAnimation.value,
                         child: Text(
@@ -122,7 +130,7 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
                       ),
                     ),
 
-                    // Center Animated Sacred SanatanDrishti Logo & Title
+                    // Center Animated Sacred SanatanDrishti Logo
                     Transform.scale(
                       scale: _scaleAnimation.value,
                       child: Opacity(
@@ -136,69 +144,27 @@ class _SpiritualSplashScreenState extends State<SpiritualSplashScreen>
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.saffronPrimary.withAlpha((90 * _glowAnimation.value).toInt()),
-                                    blurRadius: 45 * _glowAnimation.value,
-                                    spreadRadius: 8 * _glowAnimation.value,
+                                    color: AppColors.saffronPrimary.withAlpha((110 * _glowAnimation.value).toInt()),
+                                    blurRadius: 65 * _glowAnimation.value,
+                                    spreadRadius: 15 * _glowAnimation.value,
                                   ),
                                   BoxShadow(
-                                    color: AppColors.gold.withAlpha((70 * _glowAnimation.value).toInt()),
-                                    blurRadius: 28 * _glowAnimation.value,
+                                    color: AppColors.gold.withAlpha((85 * _glowAnimation.value).toInt()),
+                                    blurRadius: 38 * _glowAnimation.value,
+                                    spreadRadius: 5 * _glowAnimation.value,
                                   ),
                                 ],
                               ),
                               child: Container(
                                 constraints: const BoxConstraints(
-                                  maxHeight: 220,
-                                  maxWidth: 280,
+                                  maxHeight: 330,
+                                  maxWidth: 350,
                                 ),
                                 child: Image.asset(
                                   'assets/images/sanatandrishti_logo.png',
                                   fit: BoxFit.contain,
                                   filterQuality: FilterQuality.high,
                                   errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Main Sacred App Title in Sanskrit
-                            Text(
-                              '॥ सनातन दृष्टि ॥',
-                              style: GoogleFonts.notoSerifDevanagari(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 1.4,
-                                shadows: [
-                                  Shadow(
-                                    color: AppColors.gold.withAlpha(180),
-                                    blurRadius: 16,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // Feature Badges
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(16),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: AppColors.gold.withAlpha(70),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                'पञ्चाङ्ग  •  गीता  •  कुण्डली  •  राशि',
-                                style: GoogleFonts.notoSerifDevanagari(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white.withAlpha(230),
-                                  letterSpacing: 1.2,
                                 ),
                               ),
                             ),

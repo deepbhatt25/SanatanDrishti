@@ -436,6 +436,8 @@ class KundaliResult {
   final String varnaHi;
   final String varnaGu;
   final String luckyColor;
+  final String luckyColorHi;
+  final String luckyColorGu;
   final int luckyNumber;
   final String luckyGemstoneHi;
   final String luckyGemstoneGu;
@@ -463,6 +465,8 @@ class KundaliResult {
     required this.varnaHi,
     required this.varnaGu,
     required this.luckyColor,
+    this.luckyColorHi = '',
+    this.luckyColorGu = '',
     required this.luckyNumber,
     required this.luckyGemstoneHi,
     required this.luckyGemstoneGu,
@@ -530,6 +534,8 @@ class KundaliResult {
         'varnaHi': varnaHi,
         'varnaGu': varnaGu,
         'luckyColor': luckyColor,
+        'luckyColorHi': luckyColorHi,
+        'luckyColorGu': luckyColorGu,
         'luckyNumber': luckyNumber,
         'luckyGemstoneHi': luckyGemstoneHi,
         'luckyGemstoneGu': luckyGemstoneGu,
@@ -558,6 +564,8 @@ class KundaliResult {
         varnaHi: json['varnaHi'] as String? ?? '',
         varnaGu: json['varnaGu'] as String? ?? '',
         luckyColor: json['luckyColor'] as String? ?? 'Gold',
+        luckyColorHi: json['luckyColorHi'] as String? ?? json['luckyColor'] as String? ?? 'पीला, सुनहरा',
+        luckyColorGu: json['luckyColorGu'] as String? ?? json['luckyColor'] as String? ?? 'પીળો, સોનેરી',
         luckyNumber: json['luckyNumber'] as int? ?? 1,
         luckyGemstoneHi: json['luckyGemstoneHi'] as String? ?? '',
         luckyGemstoneGu: json['luckyGemstoneGu'] as String? ?? '',

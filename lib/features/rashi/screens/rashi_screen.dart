@@ -5,6 +5,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/rashi_data.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
+import '../../../core/widgets/ad_native_card.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/rashi_symbol_widget.dart';
 import '../../kundali/screens/create_kundali_screen.dart';
@@ -54,109 +56,117 @@ class _RashiScreenState extends State<RashiScreen> {
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // Pinned "My Rashi" Hero Card
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.maroonPrimary.withAlpha(50),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  RashiAvatarEmblem(rashi: defaultRashi, diameter: 52),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                // Pinned "My Rashi" Hero Card
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.maroonPrimary.withAlpha(50),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.star_rounded, size: 14, color: AppColors.goldLight),
-                            const SizedBox(width: 4),
-                            Text(
-                              isGujarati ? 'મારી મુખ્ય રાશિ' : 'MY DEFAULT RASHI',
-                              style: isGujarati
-                                  ? GoogleFonts.notoSerifGujarati(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.goldLight,
-                                      letterSpacing: 0.8,
-                                    )
-                                  : GoogleFonts.outfit(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.goldLight,
-                                      letterSpacing: 1.1,
-                                    ),
-                            ),
-                          ],
+                        RashiAvatarEmblem(rashi: defaultRashi, diameter: 52),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.star_rounded, size: 14, color: AppColors.goldLight),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isGujarati ? 'મારી મુખ્ય રાશિ' : 'MY DEFAULT RASHI',
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.goldLight,
+                                            letterSpacing: 0.8,
+                                          )
+                                        : GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.goldLight,
+                                            letterSpacing: 1.1,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$defaultRashiName (${defaultRashi.englishName})',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      )
+                                    : GoogleFonts.notoSerifDevanagari(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                              ),
+                              Text(
+                                '${AppStrings.rulingPlanetLabel(currentLang)}: $defaultRulingPlanet',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(
+                                        fontSize: 11,
+                                        color: Colors.white70,
+                                      )
+                                    : GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        color: Colors.white70,
+                                      ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '$defaultRashiName (${defaultRashi.englishName})',
-                          style: isGujarati
-                              ? GoogleFonts.notoSerifGujarati(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                )
-                              : GoogleFonts.notoSerifDevanagari(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                        ),
-                        Text(
-                          '${AppStrings.rulingPlanetLabel(currentLang)}: $defaultRulingPlanet',
-                          style: isGujarati
-                              ? GoogleFonts.notoSerifGujarati(
-                                  fontSize: 11,
-                                  color: Colors.white70,
-                                )
-                              : GoogleFonts.outfit(
-                                  fontSize: 12,
-                                  color: Colors.white70,
-                                ),
+                        ElevatedButton(
+                          onPressed: () {
+                            rashiProvider.selectRashi(defaultRashi);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => RashiDetailScreen(rashi: defaultRashi),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.gold,
+                            foregroundColor: Colors.black87,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: Text(
+                            isGujarati ? 'વાંચો' : 'Reading',
+                            style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      rashiProvider.selectRashi(defaultRashi);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RashiDetailScreen(rashi: defaultRashi),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: Text(
-                      isGujarati ? 'વાંચો' : 'Reading',
-                      style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+                ),
+
+                // Native Ad Card
+                const SliverToBoxAdapter(
+                  child: AdNativeCard(),
+                ),
 
           // Janam Kundali Discovery Banner
           SliverToBoxAdapter(
@@ -343,6 +353,12 @@ class _RashiScreenState extends State<RashiScreen> {
             ),
         ],
       ),
+    ),
+
+    // Bottom Banner Ad
+    const AdBannerWidget(),
+  ],
+),
     );
   }
 }

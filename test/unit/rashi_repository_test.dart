@@ -28,6 +28,8 @@ void main() {
         'zodiac_sign': 'leo',
         'horoscope': 'A radiant and productive day for creative endeavors.',
         'horoscope_hindi': 'आज का दिन अत्यंत शुभ और ऊर्जावान रहेगा।',
+        'horoscope_gujarati': 'આજનો દિવસ અત્યંત શુભ અને ઊર્જાવાન રહેશે.',
+        'career_outlook_gujarati': 'કાર્યક્ષેત્રમાં ઉત્તમ સફળતા મળશે.',
         'lucky_number': '1',
         'lucky_color': 'Gold',
         'compatibility': 'Sagittarius',
@@ -36,9 +38,13 @@ void main() {
       final reading = RashiReadingModel.fromJson(json);
       expect(reading.zodiacSign, 'leo');
       expect(reading.horoscopeText, contains('radiant'));
+      expect(reading.horoscopeTextGujarati, 'આજનો દિવસ અત્યંત શુભ અને ઊર્જાવાન રહેશે.');
+      expect(reading.getEffectiveHoroscope(true), 'આજનો દિવસ અત્યંત શુભ અને ઊર્જાવાન રહેશે.');
+      expect(reading.getEffectiveHoroscope(false), 'आज का दिन अत्यंत शुभ और ऊर्जावान रहेगा।');
       expect(reading.rashiInfo.hindiName, 'सिंह');
+      expect(reading.rashiInfo.gujaratiName, 'સિંહ');
       expect(reading.rashiInfo.symbol, '♌');
-      expect(reading.toJson()['lucky_number'], '1');
+      expect(reading.toJson()['horoscope_gujarati'], 'આજનો દિવસ અત્યંત શુભ અને ઊર્જાવાન રહેશે.');
     });
   });
 }

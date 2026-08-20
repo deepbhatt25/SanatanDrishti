@@ -143,6 +143,8 @@ class KundaliCalculator {
       varnaHi: avakahada['varnaHi']!,
       varnaGu: avakahada['varnaGu']!,
       luckyColor: avakahada['luckyColor']!,
+      luckyColorHi: avakahada['luckyColorHi']!,
+      luckyColorGu: avakahada['luckyColorGu']!,
       luckyNumber: int.tryParse(avakahada['luckyNumber'] ?? '1') ?? 1,
       luckyGemstoneHi: avakahada['gemHi']!,
       luckyGemstoneGu: avakahada['gemGu']!,
@@ -417,7 +419,34 @@ class KundaliCalculator {
     const gemsGu = ['પરવાળું (Red Coral)', 'હીરો (Diamond)', 'પન્ના (Emerald)', 'મોતી (Pearl)', 'માણેક (Ruby)', 'પન્ના (Emerald)', 'હીરો (Diamond)', 'પરવાળું (Red Coral)', 'પોખરાજ (Yellow Sapphire)', 'નીલમ (Blue Sapphire)', 'નીલમ (Blue Sapphire)', 'પોખરાજ (Yellow Sapphire)'];
 
     const luckyNumbers = ['9', '6', '5', '2', '1', '5', '6', '9', '3', '8', '8', '3'];
-    const luckyColors = ['लाल, केसरिया (Red, Saffron)', 'सफेद, क्रीम (White, Cream)', 'हरा, पीला (Green, Yellow)', 'सफेद, चांदी (White, Silver)', 'सुनहरा, नारंगी (Gold, Orange)', 'हरा, हल्का नीला (Green, Cyan)', 'सफेद, गुलाबी (White, Pink)', 'गहरा लाल, मैरून (Maroon)', 'पीला, सुनहरा (Yellow, Gold)', 'नीला, काला (Blue, Black)', 'आसमानी नीला (Sky Blue)', 'पीला, नारंगी (Yellow, Orange)'];
+    const luckyColorsHi = [
+      'लाल, केसरिया (Red, Saffron)',
+      'सफेद, क्रीम (White, Cream)',
+      'हरा, पीला (Green, Yellow)',
+      'सफेद, चांदी (White, Silver)',
+      'सुनहरा, नारंगी (Gold, Orange)',
+      'हरा, हल्का नीला (Green, Cyan)',
+      'सफेद, गुलाबी (White, Pink)',
+      'गहरा लाल, मैरून (Maroon)',
+      'पीला, सुनहरा (Yellow, Gold)',
+      'नीला, काला (Blue, Black)',
+      'आसमानी नीला (Sky Blue)',
+      'पीला, नारंगी (Yellow, Orange)',
+    ];
+    const luckyColorsGu = [
+      'લાલ, કેસરી (Red, Saffron)',
+      'સફેદ, ક્રીમ (White, Cream)',
+      'લીલો, પીળો (Green, Yellow)',
+      'સફેદ, ચાંદી (White, Silver)',
+      'સોનેરી, નારંગી (Gold, Orange)',
+      'લીલો, આછો વાદળી (Green, Cyan)',
+      'સફેદ, ગુલાબી (White, Pink)',
+      'ઘેરો લાલ, મરૂન (Maroon)',
+      'પીળો, સોનેરી (Yellow, Gold)',
+      'વાદળી, કાળો (Blue, Black)',
+      'આકાશી વાદળી (Sky Blue)',
+      'પીળો, નારંગી (Yellow, Orange)',
+    ];
 
     final nadiIdx = nakshatraIndex % 3;
     final yoniIdx = nakshatraIndex % 14;
@@ -436,7 +465,9 @@ class KundaliCalculator {
       'gemHi': gemsHi[rashiIdx],
       'gemGu': gemsGu[rashiIdx],
       'luckyNumber': luckyNumbers[rashiIdx],
-      'luckyColor': luckyColors[rashiIdx],
+      'luckyColor': luckyColorsHi[rashiIdx],
+      'luckyColorHi': luckyColorsHi[rashiIdx],
+      'luckyColorGu': luckyColorsGu[rashiIdx],
     };
   }
 

@@ -6,6 +6,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/chapter_metadata.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/services/ad_service.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/error_state_view.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -155,6 +157,9 @@ class _VerseDetailScreenState extends State<VerseDetailScreen> {
 
                     // Previous / Next Navigation Row
                     _buildNavigationRow(context, geetaProvider, ch, v, maxVerses, isDark),
+
+                    // Bottom Banner Ad
+                    const AdBannerWidget(),
                   ],
                 ),
     );
@@ -454,7 +459,12 @@ class _VerseDetailScreenState extends State<VerseDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             OutlinedButton.icon(
-              onPressed: hasPrev ? () => geetaProvider.previousVerse() : null,
+              onPressed: hasPrev
+                  ? () {
+                      geetaProvider.previousVerse();
+                      AdService.instance.recordActionAndCheckInterstitial();
+                    }
+                  : null,
               icon: const Icon(Icons.arrow_back_ios_rounded, size: 14),
               label: const Text('Previous'),
             ),
@@ -467,7 +477,12 @@ class _VerseDetailScreenState extends State<VerseDetailScreen> {
               ),
             ),
             ElevatedButton.icon(
-              onPressed: hasNext ? () => geetaProvider.nextVerse() : null,
+              onPressed: hasNext
+                  ? () {
+                      geetaProvider.nextVerse();
+                      AdService.instance.recordActionAndCheckInterstitial();
+                    }
+                  : null,
               label: const Text('Next'),
               icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
             ),
