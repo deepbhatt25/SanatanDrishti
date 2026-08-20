@@ -61,5 +61,8 @@ void main() {
     expect(find.text('॥ ॐ नमो भगवते वासुदेवाय ॥'), findsOneWidget);
     expect(find.text('॥ यतो धर्मस्ततो जयः ॥'), findsOneWidget);
     expect(find.byType(Image), findsOneWidget);
+
+    // Dispose splash screen to cancel pending timer
+    await tester.pumpWidget(const SizedBox());
   });
 }

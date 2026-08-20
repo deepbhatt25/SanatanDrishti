@@ -208,5 +208,51 @@ void main() {
       expect(nov24.isPurnima, true);
       expect(nov24.festivalGu?.contains('દેવ દિવાળી'), true);
     });
+
+    test('Generates valid Tithi calendar for past years (e.g. 1950, 1980, 2000)', () {
+      final cal1950 = MonthTithiCalendarData.generateMonthCalendar(
+        year: 1950,
+        month: 1,
+        city: city,
+      );
+      expect(cal1950.year, 1950);
+      expect(cal1950.month, 1);
+      expect(cal1950.totalDays, 31);
+      expect(cal1950.days.length, 31);
+      expect(cal1950.vikramSamvat.isNotEmpty, true);
+      expect(cal1950.days.any((d) => d.isPurnima || d.isAmavasya), true);
+
+      final cal2000 = MonthTithiCalendarData.generateMonthCalendar(
+        year: 2000,
+        month: 2,
+        city: city,
+      );
+      expect(cal2000.year, 2000);
+      expect(cal2000.totalDays, 29); // Leap year
+      expect(cal2000.days.length, 29);
+    });
+
+    test('Generates valid Tithi calendar for future years (e.g. 2030, 2050)', () {
+      final cal2030 = MonthTithiCalendarData.generateMonthCalendar(
+        year: 2030,
+        month: 10,
+        city: city,
+      );
+      expect(cal2030.year, 2030);
+      expect(cal2030.month, 10);
+      expect(cal2030.totalDays, 31);
+      expect(cal2030.days.length, 31);
+      expect(cal2030.vikramSamvat.isNotEmpty, true);
+
+      final cal2050 = MonthTithiCalendarData.generateMonthCalendar(
+        year: 2050,
+        month: 8,
+        city: city,
+      );
+      expect(cal2050.year, 2050);
+      expect(cal2050.month, 8);
+      expect(cal2050.totalDays, 31);
+      expect(cal2050.days.length, 31);
+    });
   });
 }

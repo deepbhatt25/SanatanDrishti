@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:bhagvat_geeta_app/features/kundali/models/kundali_model.dart';
 import 'package:bhagvat_geeta_app/features/kundali/services/kundali_calculator.dart';
 import 'package:bhagvat_geeta_app/features/kundali/services/kundali_pdf_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   group('Kundali PDF Service Tests', () {
     test('Generates valid Vedic Kundali PDF document', () async {

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -33,6 +32,16 @@ class SavedKundalisScreen extends StatelessWidget {
         await _downloadKundaliPdf(context, k, isGujarati);
       },
     );
+  }
+
+  Rect? _getSafeOrigin(BuildContext ctx) {
+    try {
+      final ro = ctx.findRenderObject();
+      if (ro is RenderBox && ro.hasSize) {
+        return ro.localToGlobal(Offset.zero) & ro.size;
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<void> _downloadKundaliPdf(BuildContext context, KundaliResult k, bool isGujarati) async {
@@ -95,27 +104,32 @@ class SavedKundalisScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                Platform.isIOS
-                    ? (isGujarati
-                        ? 'કુંડળી PDF સફળતાપૂર્વક સાચવવામાં આવી છે!\n\n📁 ફાઈલ જોવા માટે: Files એપ -> Browse (નીચે) -> On My iPhone -> SanatanDrishti / Downloads ખોલો.'
-                        : 'कुंडली PDF सफलतापूर्वक सहेजी गई है!\n\n📁 फाइल देखने के लिए: Files ऐप -> Browse (नीचे) -> On My iPhone -> SanatanDrishti / Downloads खोलें।')
-                    : (isGujarati
-                        ? 'કુંડળી PDF સફળતાપૂર્વક તમારા ફોનના Downloads ફોલ્ડરમાં સાચવવામાં આવી છે (/storage/emulated/0/Download/):'
-                        : 'कुंडली PDF सफलतापूर्वक आपके फोन के Downloads फोल्डर में सहेजी गई है (/storage/emulated/0/Download/):'),
-                style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, height: 1.4),
+                isGujarati
+                    ? 'કુંડળી PDF સફળતાપૂર્વક સાચવવામાં આવી છે!'
+                    : 'कुंडली PDF सफलतापूर्वक सहेजी गई है!',
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 13.5, height: 1.4),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.black.withAlpha(80),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.gold.withAlpha(60)),
                 ),
-                child: SelectableText(
-                  file.path,
-                  style: GoogleFonts.outfit(color: AppColors.goldLight, fontSize: 11),
+                child: Row(
+                  children: [
+                    const Icon(Icons.insert_drive_file_rounded, color: AppColors.goldLight, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        file.path.split('/').last,
+                        style: GoogleFonts.outfit(color: AppColors.goldLight, fontSize: 12, fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -132,8 +146,7 @@ class SavedKundalisScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () {
-                final box = ctx.findRenderObject() as RenderBox?;
-                final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+                final origin = _getSafeOrigin(ctx);
                 KundaliPdfService.instance.sharePdf(
                   file.path,
                   sharePositionOrigin: origin,
@@ -222,8 +235,7 @@ class SavedKundalisScreen extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
 
-      final box = context.findRenderObject() as RenderBox?;
-      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+      final origin = _getSafeOrigin(context);
       await KundaliPdfService.instance.sharePdf(
         file.path,
         sharePositionOrigin: origin,

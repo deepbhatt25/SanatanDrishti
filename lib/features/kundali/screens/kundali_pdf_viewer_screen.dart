@@ -68,9 +68,14 @@ class _KundaliPdfViewerScreenState extends State<KundaliPdfViewerScreen> {
 
     if (!mounted) return;
 
-    if (isShare && _savedFile != null) {
-      final box = context.findRenderObject() as RenderBox?;
-      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+    if (_savedFile != null) {
+      Rect? origin;
+      try {
+        final ro = context.findRenderObject();
+        if (ro is RenderBox && ro.hasSize) {
+          origin = ro.localToGlobal(Offset.zero) & ro.size;
+        }
+      } catch (_) {}
       await KundaliPdfService.instance.sharePdf(
         _savedFile!.path,
         sharePositionOrigin: origin,
@@ -78,17 +83,31 @@ class _KundaliPdfViewerScreenState extends State<KundaliPdfViewerScreen> {
             ? '${widget.kundali.profile.name} ની જન્મ કુંડળી'
             : '${widget.kundali.profile.name} की जन्म कुंडली',
       );
-    } else if (_savedFile != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.isGujarati
-                ? 'કુંડળી PDF સાચવવામાં આવી: ${_savedFile!.path.split('/').last}'
-                : 'कुंडली PDF सहेजी गई: ${_savedFile!.path.split('/').last}',
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.maroonPrimary,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: AppColors.goldLight, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.isGujarati
+                        ? 'કુંડળી PDF સફળતાપૂર્વક સાચવવામાં આવી!'
+                        : 'कुंडली PDF सफलतापूर्वक सहेजी गई!',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
-          backgroundColor: AppColors.saffronDark,
-        ),
-      );
+        );
+      }
     }
   }
 

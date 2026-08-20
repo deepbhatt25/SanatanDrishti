@@ -21,12 +21,28 @@ class TithiCalendarWidget extends StatefulWidget {
 
 class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
   late DateTime _viewMonth;
+  DateTime? _lastObservedDate;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<PanchangProvider>();
     _viewMonth = DateTime(provider.selectedDate.year, provider.selectedDate.month, 1);
+    _lastObservedDate = provider.selectedDate;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = context.read<PanchangProvider>();
+    if (_lastObservedDate != provider.selectedDate) {
+      _lastObservedDate = provider.selectedDate;
+      if (_viewMonth.year != provider.selectedDate.year || _viewMonth.month != provider.selectedDate.month) {
+        setState(() {
+          _viewMonth = DateTime(provider.selectedDate.year, provider.selectedDate.month, 1);
+        });
+      }
+    }
   }
 
   void _previousMonth() {
@@ -41,6 +57,41 @@ class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
     });
   }
 
+  void _goToToday() {
+    final now = DateTime.now();
+    setState(() {
+      _viewMonth = DateTime(now.year, now.month, 1);
+    });
+    final provider = context.read<PanchangProvider>();
+    provider.selectDate(now);
+    widget.onDateSelectedCallback?.call();
+  }
+
+  void _openMonthYearPicker(BuildContext context, bool isDark, bool isGujarati) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _MonthYearPickerSheet(
+        initialYear: _viewMonth.year,
+        initialMonth: _viewMonth.month,
+        isDark: isDark,
+        isGujarati: isGujarati,
+        onApply: (selectedYear, selectedMonth) {
+          setState(() {
+            _viewMonth = DateTime(selectedYear, selectedMonth, 1);
+          });
+          final provider = context.read<PanchangProvider>();
+          final currentDay = provider.selectedDate.day;
+          final maxDay = DateTime(selectedYear, selectedMonth + 1, 0).day;
+          final safeDay = currentDay <= maxDay ? currentDay : maxDay;
+          provider.selectDate(DateTime(selectedYear, selectedMonth, safeDay));
+          widget.onDateSelectedCallback?.call();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final panchangProvider = context.watch<PanchangProvider>();
@@ -48,6 +99,8 @@ class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
     final isGujarati = langProvider.isGujarati;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedDate = panchangProvider.selectedDate;
+    final now = DateTime.now();
+    final isCurrentMonth = _viewMonth.year == now.year && _viewMonth.month == now.month;
 
     final monthData = MonthTithiCalendarData.generateMonthCalendar(
       year: _viewMonth.year,
@@ -89,7 +142,7 @@ class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Header: Month Navigation & Vikram Samvat
+          // 1. Header: Interactive Month Navigation & Vikram Samvat
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -99,46 +152,75 @@ class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
                 tooltip: isGujarati ? 'અગાઉનો મહિનો' : 'पिछला महीना',
               ),
               Expanded(
-                child: Column(
-                  children: [
-                    // Lunar Month & Vikram Samvat
-                    Text(
-                      isGujarati
-                          ? '${monthData.lunarMonthGu} • સંવત ${monthData.vikramSamvat}'
-                          : '${monthData.lunarMonthHi} • संवत् ${monthData.vikramSamvat}',
-                      style: isGujarati
-                          ? GoogleFonts.notoSerifGujarati(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.saffronPrimary,
-                            )
-                          : GoogleFonts.notoSerifDevanagari(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.saffronPrimary,
-                            ),
-                      textAlign: TextAlign.center,
+                child: Tooltip(
+                  message: isGujarati ? 'માસ અને વર્ષ પસંદ કરો' : 'माह एवं वर्ष चुनें',
+                  child: InkWell(
+                    onTap: () => _openMonthYearPicker(context, isDark, isGujarati),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black.withAlpha(50) : AppColors.saffronPrimary.withAlpha(15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.gold.withAlpha(isDark ? 90 : 130),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Lunar Month & Vikram Samvat
+                          Text(
+                            isGujarati
+                                ? '${monthData.lunarMonthGu} • સંવત ${monthData.vikramSamvat}'
+                                : '${monthData.lunarMonthHi} • संवत् ${monthData.vikramSamvat}',
+                            style: isGujarati
+                                ? GoogleFonts.notoSerifGujarati(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.saffronPrimary,
+                                  )
+                                : GoogleFonts.notoSerifDevanagari(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.saffronPrimary,
+                                  ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 2),
+                          // Gregorian Month Year + Dropdown Arrow
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.saffronPrimary),
+                              const SizedBox(width: 5),
+                              Text(
+                                isGujarati
+                                    ? '${monthData.monthNameGu} ${_viewMonth.year}'
+                                    : '${monthData.monthNameHi} ${_viewMonth.year}',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(
+                                        fontSize: 16.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : AppColors.maroonPrimary,
+                                      )
+                                    : GoogleFonts.notoSerifDevanagari(
+                                        fontSize: 16.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : AppColors.maroonPrimary,
+                                      ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_drop_down_rounded, size: 22, color: AppColors.saffronPrimary),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    // Gregorian Month Year
-                    Text(
-                      isGujarati
-                          ? '${monthData.monthNameGu} ${_viewMonth.year}'
-                          : '${monthData.monthNameHi} ${_viewMonth.year}',
-                      style: isGujarati
-                          ? GoogleFonts.notoSerifGujarati(
-                              fontSize: 16.5,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.maroonPrimary,
-                            )
-                          : GoogleFonts.notoSerifDevanagari(
-                              fontSize: 16.5,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.maroonPrimary,
-                            ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  ),
                 ),
               ),
               IconButton(
@@ -148,6 +230,46 @@ class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
               ),
             ],
           ),
+
+          // Quick Jump to Today if viewing another month
+          if (!isCurrentMonth) ...[
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: _goToToday,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: AppColors.saffronPrimary.withAlpha(isDark ? 45 : 20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.saffronPrimary, width: 0.8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.today_rounded, size: 13, color: AppColors.saffronPrimary),
+                    const SizedBox(width: 4),
+                    Text(
+                      isGujarati
+                          ? 'આજનો માસ (${DateFormat('MMM yyyy').format(now)})'
+                          : 'वर्तमान माह (${DateFormat('MMM yyyy').format(now)})',
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.saffronPrimary,
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.saffronPrimary,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 10),
 
@@ -462,6 +584,432 @@ class _TithiCalendarWidgetState extends State<TithiCalendarWidget> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthYearPickerSheet extends StatefulWidget {
+  final int initialYear;
+  final int initialMonth;
+  final bool isDark;
+  final bool isGujarati;
+  final void Function(int year, int month) onApply;
+
+  const _MonthYearPickerSheet({
+    required this.initialYear,
+    required this.initialMonth,
+    required this.isDark,
+    required this.isGujarati,
+    required this.onApply,
+  });
+
+  @override
+  State<_MonthYearPickerSheet> createState() => _MonthYearPickerSheetState();
+}
+
+class _MonthYearPickerSheetState extends State<_MonthYearPickerSheet> {
+  late int _selectedYear;
+  late int _selectedMonth;
+
+  static const List<String> _monthsHi = [
+    'जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+    'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'
+  ];
+
+  static const List<String> _monthsGu = [
+    'જાન્યુઆરી', 'ફેબ્રુઆરી', 'માર્ચ', 'એપ્રિલ', 'મે', 'જૂન',
+    'જુલાઈ', 'ઓગસ્ટ', 'સપ્ટેમ્બર', 'ઓક્ટોબર', 'નવેમ્બર', 'ડિસેમ્બર'
+  ];
+
+  static const List<String> _monthsEnShort = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedYear = widget.initialYear;
+    _selectedMonth = widget.initialMonth;
+  }
+
+  void _showYearPickerDialog() async {
+    final pickedYear = await showDialog<int>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: widget.isDark ? AppColors.surfaceDark : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            widget.isGujarati ? 'વર્ષ પસંદ કરો (1900 - 2100)' : 'वर्ष चुनें (1900 - 2100)',
+            style: widget.isGujarati
+                ? GoogleFonts.notoSerifGujarati(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.saffronPrimary)
+                : GoogleFonts.notoSerifDevanagari(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.saffronPrimary),
+          ),
+          content: SizedBox(
+            width: 300,
+            height: 320,
+            child: YearPicker(
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100),
+              selectedDate: DateTime(_selectedYear, _selectedMonth, 1),
+              onChanged: (DateTime dateTime) {
+                Navigator.pop(ctx, dateTime.year);
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+    if (pickedYear != null) {
+      setState(() {
+        _selectedYear = pickedYear;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final isGujarati = widget.isGujarati;
+    final now = DateTime.now();
+
+    // Generate sample preview of Vikram Samvat for the selected month/year
+    final previewCal = MonthTithiCalendarData.generateMonthCalendar(
+      year: _selectedYear,
+      month: _selectedMonth,
+      city: context.read<PanchangProvider>().selectedCity,
+    );
+
+    // Quick year list around selected year
+    final quickYears = <int>{
+      now.year - 2,
+      now.year - 1,
+      now.year,
+      now.year + 1,
+      now.year + 2,
+      _selectedYear,
+    }.toList()..sort();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(80),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 42,
+              height: 4.5,
+              decoration: BoxDecoration(
+                color: Colors.grey.withAlpha(100),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Title & Samvat Info
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isGujarati ? 'માસ અને વર્ષ પસંદ કરો' : 'माह एवं वर्ष चुनें',
+                    style: isGujarati
+                        ? GoogleFonts.notoSerifGujarati(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.maroonPrimary,
+                          )
+                        : GoogleFonts.notoSerifDevanagari(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.maroonPrimary,
+                          ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isGujarati
+                        ? '${previewCal.lunarMonthGu} • સંવત ${previewCal.vikramSamvat}'
+                        : '${previewCal.lunarMonthHi} • संवत् ${previewCal.vikramSamvat}',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.saffronPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () => Navigator.pop(context),
+                tooltip: 'Close',
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // Year Selector Stepper + Full Picker Dialog Button
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.black.withAlpha(40) : AppColors.saffronPale,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.gold.withAlpha(90)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded, size: 24, color: AppColors.saffronPrimary),
+                  onPressed: () {
+                    setState(() {
+                      _selectedYear--;
+                    });
+                  },
+                  tooltip: isGujarati ? 'અગાઉનું વર્ષ' : 'पिछला वर्ष',
+                ),
+                InkWell(
+                  onTap: _showYearPickerDialog,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.saffronPrimary.withAlpha(100)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.edit_calendar_rounded, size: 16, color: AppColors.saffronPrimary),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$_selectedYear',
+                          style: GoogleFonts.cinzel(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.maroonPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_drop_down_rounded, size: 20, color: AppColors.saffronPrimary),
+                      ],
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded, size: 24, color: AppColors.saffronPrimary),
+                  onPressed: () {
+                    setState(() {
+                      _selectedYear++;
+                    });
+                  },
+                  tooltip: isGujarati ? 'આગામી વર્ષ' : 'अगला वर्ष',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Quick Year Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: quickYears.map((yr) {
+                final isSelected = yr == _selectedYear;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(
+                      '$yr',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected ? Colors.white : (isDark ? Colors.white70 : AppColors.textSecondaryLight),
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedColor: AppColors.saffronPrimary,
+                    backgroundColor: isDark ? Colors.black.withAlpha(30) : AppColors.bgLight,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedYear = yr;
+                        });
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // 12 Months Grid (4 rows x 3 columns)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 12,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 2.3,
+            ),
+            itemBuilder: (context, idx) {
+              final monthNum = idx + 1;
+              final isSelected = monthNum == _selectedMonth;
+              final isCurrent = monthNum == now.month && _selectedYear == now.year;
+              final monthName = isGujarati ? _monthsGu[idx] : _monthsHi[idx];
+              final enShort = _monthsEnShort[idx];
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedMonth = monthNum;
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [AppColors.saffronPrimary, AppColors.maroonPrimary],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isSelected
+                        ? null
+                        : (isDark ? Colors.black.withAlpha(40) : AppColors.bgLight),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.gold
+                          : (isCurrent
+                              ? AppColors.saffronPrimary
+                              : (isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight)),
+                      width: isSelected ? 1.5 : (isCurrent ? 1.2 : 0.8),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        monthName,
+                        style: isGujarati
+                            ? GoogleFonts.notoSerifGujarati(
+                                fontSize: 11.5,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark ? Colors.white : AppColors.textPrimaryLight),
+                              )
+                            : GoogleFonts.notoSerifDevanagari(
+                                fontSize: 11.5,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark ? Colors.white : AppColors.textPrimaryLight),
+                              ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '$monthNum • $enShort',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? AppColors.goldLight : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 18),
+
+          // Bottom Action Buttons
+          Row(
+            children: [
+              // Today / Current Month Quick Jump
+              Expanded(
+                flex: 1,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _selectedYear = now.year;
+                      _selectedMonth = now.month;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.saffronPrimary,
+                    side: const BorderSide(color: AppColors.saffronPrimary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.today_rounded, size: 16),
+                  label: Text(
+                    isGujarati ? 'આ મહિનો' : 'यह माह',
+                    style: isGujarati
+                        ? GoogleFonts.notoSerifGujarati(fontSize: 12.5, fontWeight: FontWeight.bold)
+                        : GoogleFonts.notoSerifDevanagari(fontSize: 12.5, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Apply Button
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    widget.onApply(_selectedYear, _selectedMonth);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.maroonPrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
+                  ),
+                  icon: const Icon(Icons.check_circle_rounded, color: AppColors.goldLight, size: 18),
+                  label: Text(
+                    isGujarati ? 'લાગુ કરો' : 'लागू करें',
+                    style: isGujarati
+                        ? GoogleFonts.notoSerifGujarati(fontSize: 13.5, fontWeight: FontWeight.bold)
+                        : GoogleFonts.notoSerifDevanagari(fontSize: 13.5, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

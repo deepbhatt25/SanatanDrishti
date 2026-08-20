@@ -707,6 +707,47 @@ class _PanchangScreenState extends State<PanchangScreen> {
     );
   }
 
+  Future<void> _openDatePicker(
+    BuildContext context,
+    PanchangProvider provider,
+    bool isDark,
+    bool isGujarati,
+  ) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: provider.selectedDate,
+      firstDate: DateTime(1900, 1, 1),
+      lastDate: DateTime(2100, 12, 31),
+      helpText: isGujarati ? 'તારીખ પસંદ કરો' : 'दिनांक चुनें',
+      cancelText: isGujarati ? 'રદ કરો' : 'रद्द करें',
+      confirmText: isGujarati ? 'પસંદ કરો' : 'चुनें',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: AppColors.saffronPrimary,
+                    onPrimary: Colors.white,
+                    surface: AppColors.surfaceDark,
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: AppColors.maroonPrimary,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: AppColors.textPrimaryLight,
+                  ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      provider.selectDate(picked);
+    }
+  }
+
   Widget _buildLocationDateBar(
     BuildContext context,
     PanchangProvider provider,
@@ -784,7 +825,7 @@ class _PanchangScreenState extends State<PanchangScreen> {
               ),
               const SizedBox(width: 4),
               InkWell(
-                onTap: isToday ? null : () => provider.selectDate(DateTime.now()),
+                onTap: () => _openDatePicker(context, provider, isDark, isGujarati),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -800,6 +841,8 @@ class _PanchangScreenState extends State<PanchangScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      const Icon(Icons.calendar_month_rounded, size: 13, color: AppColors.saffronPrimary),
+                      const SizedBox(width: 4),
                       Text(
                         _getDateLabel(selectedDate, isGujarati),
                         style: isGujarati
@@ -815,8 +858,15 @@ class _PanchangScreenState extends State<PanchangScreen> {
                               ),
                       ),
                       if (!isToday) ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.restore_rounded, size: 12, color: AppColors.saffronPrimary),
+                        const SizedBox(width: 5),
+                        InkWell(
+                          onTap: () => provider.selectDate(DateTime.now()),
+                          borderRadius: BorderRadius.circular(10),
+                          child: const Padding(
+                            padding: EdgeInsets.all(1.0),
+                            child: Icon(Icons.restore_rounded, size: 13, color: AppColors.saffronPrimary),
+                          ),
+                        ),
                       ],
                     ],
                   ),
