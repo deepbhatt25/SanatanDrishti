@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
 import '../../geeta/screens/chapters_screen.dart';
 import '../../kundali/screens/create_kundali_screen.dart';
 import '../../panchang/screens/panchang_screen.dart';
@@ -30,6 +31,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final langProvider = context.watch<LanguageProvider>();
     final isGujarati = langProvider.isGujarati;
 
@@ -42,13 +44,39 @@ class _MainShellScreenState extends State<MainShellScreen> {
           RashiScreen(),    // Tab 2 (Right)
         ],
       ),
-      bottomNavigationBar: SpiritualBottomNavBar(
-        currentIndex: _currentIndex,
-        onTabSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+              width: 1,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(isDark ? 80 : 25),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SpiritualBottomNavBar(
+              currentIndex: _currentIndex,
+              onTabSelected: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+            ),
+            const AdBannerWidget(
+              margin: EdgeInsets.zero,
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _currentIndex == 1
           ? FloatingActionButton.small(

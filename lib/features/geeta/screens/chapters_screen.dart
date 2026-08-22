@@ -5,7 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/chapter_metadata.dart';
 import '../../../core/providers/language_provider.dart';
-import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/ad_native_card.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../models/chapter_model.dart';
@@ -59,12 +58,9 @@ class ChaptersScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                // Last Read Banner
+      body: CustomScrollView(
+        slivers: [
+          // Last Read Banner
                 SliverToBoxAdapter(
                   child: Container(
                     margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -297,12 +293,6 @@ class ChaptersScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-
-          // Bottom Banner Ad
-          const AdBannerWidget(),
-        ],
-      ),
     );
   }
 }

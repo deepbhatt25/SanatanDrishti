@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/providers/language_provider.dart';
-import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/ad_native_card.dart';
 import '../../../core/widgets/ad_reward_dialog.dart';
 import '../../../core/widgets/custom_app_bar.dart';
@@ -513,9 +512,6 @@ class _PanchangScreenState extends State<PanchangScreen> {
                               ],
                             ),
             ),
-
-            // Bottom Banner Ad
-            const AdBannerWidget(),
           ],
         ),
       ),

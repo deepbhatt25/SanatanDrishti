@@ -5,7 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/rashi_data.dart';
 import '../../../core/providers/language_provider.dart';
-import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/ad_native_card.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/rashi_symbol_widget.dart';
@@ -56,12 +55,9 @@ class _RashiScreenState extends State<RashiScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                // Pinned "My Rashi" Hero Card
+      body: CustomScrollView(
+        slivers: [
+          // Pinned "My Rashi" Hero Card
                 SliverToBoxAdapter(
                   child: Container(
                     margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -353,12 +349,6 @@ class _RashiScreenState extends State<RashiScreen> {
             ),
         ],
       ),
-    ),
-
-    // Bottom Banner Ad
-    const AdBannerWidget(),
-  ],
-),
     );
   }
 }

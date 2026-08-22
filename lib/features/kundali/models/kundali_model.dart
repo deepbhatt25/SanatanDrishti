@@ -477,6 +477,12 @@ class KundaliResult {
     required this.lifePrediction,
   });
 
+  /// Lagna's Navamsha Rashi ID (1 to 12)
+  int get lagnaNavamshaRashiId {
+    final lagnaTotalLong = (lagnaRashiId - 1) * 30.0 + lagnaDegree;
+    return ((lagnaTotalLong / (30.0 / 9.0)).floor() % 12) + 1;
+  }
+
   /// Map from house number (1-12) to sign id (1-12) in D1 Lagna chart
   Map<int, int> get houseSignMap {
     final map = <int, int>{};
@@ -494,21 +500,38 @@ class KundaliResult {
       map[h] = [];
     }
     for (final p in planets) {
-      if (p.houseNumber >= 1 && p.houseNumber <= 12) {
-        map[p.houseNumber]?.add(p);
+      final h = ((p.rashiId - lagnaRashiId + 12) % 12) + 1;
+      if (h >= 1 && h <= 12) {
+        map[h]?.add(p);
       }
     }
     return map;
   }
 
-  /// Navamsha (D9) house to planets map
+  /// Navamsha (D9) house to planets map (relative to Lagna's Navamsha sign)
   Map<int, List<PlanetPosition>> get navamshaHousePlanetsMap {
     final map = <int, List<PlanetPosition>>{};
     for (int h = 1; h <= 12; h++) {
       map[h] = [];
     }
+    final d9Lagna = lagnaNavamshaRashiId;
     for (final p in planets) {
-      final h = p.navamshaRashiId;
+      final h = ((p.navamshaRashiId - d9Lagna + 12) % 12) + 1;
+      if (h >= 1 && h <= 12) {
+        map[h]?.add(p);
+      }
+    }
+    return map;
+  }
+
+  /// Chandra Kundali house to planets map (relative to Moon's sign)
+  Map<int, List<PlanetPosition>> get chandraHousePlanetsMap {
+    final map = <int, List<PlanetPosition>>{};
+    for (int h = 1; h <= 12; h++) {
+      map[h] = [];
+    }
+    for (final p in planets) {
+      final h = ((p.rashiId - moonRashiId + 12) % 12) + 1;
       if (h >= 1 && h <= 12) {
         map[h]?.add(p);
       }
