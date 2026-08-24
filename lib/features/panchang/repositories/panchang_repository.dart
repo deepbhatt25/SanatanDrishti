@@ -91,17 +91,96 @@ class PanchangRepository {
     final karanaName = karanaObj['name']?.toString() ?? 'गर (Gara)';
 
     final sunTimes = _calculateSunTimes(date, city);
+    final nextSunTimes = _calculateSunTimes(date.add(const Duration(days: 1)), city);
     final moonTimes = _calculateMoonTimes(date, sunTimes.sunriseMinutes, sunTimes.sunsetMinutes);
+
+    final refLocalTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      sunTimes.sunriseMinutes ~/ 60,
+      sunTimes.sunriseMinutes % 60,
+    );
+
+    final angles = _calculateAnglesAt(refLocalTime);
+    final tithiIndex = (angles.tithiAngle / 12.0).floor() % 30;
+    final tithiSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 12.0,
+      angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
+    );
+    final nextTithiIdx = (tithiIndex + 1) % 30;
+
+    final nakshatraIdx = (angles.nakshatraAngle / (360.0 / 27.0)).floor() % 27;
+    final nakshatraSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 360.0 / 27.0,
+      angleGetter: (t) => _calculateAnglesAt(t).nakshatraAngle,
+    );
+    final nextNakshatraIdx = (nakshatraIdx + 1) % 27;
+
+    final yogaIdx = (angles.yogaAngle / (360.0 / 27.0)).floor() % 27;
+    final yogaSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 360.0 / 27.0,
+      angleGetter: (t) => _calculateAnglesAt(t).yogaAngle,
+    );
+    final nextYogaIdx = (yogaIdx + 1) % 27;
+
+    final karanaFullIdx = (angles.tithiAngle / 6.0).floor() % 60;
+    final nextKarana = _getKaranaName(karanaFullIdx + 1);
+    final karanaSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 6.0,
+      angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
+    );
+
+    final rashiIdx = (angles.rashiAngle / 30.0).floor() % 12;
+    final rashiSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 30.0,
+      angleGetter: (t) => _calculateAnglesAt(t).rashiAngle,
+      maxBack: const Duration(hours: 60),
+      maxForward: const Duration(hours: 60),
+    );
+    final nextRashiIdx = (rashiIdx + 1) % 12;
+    final nextWeekday = (date.weekday % 7) + 1;
 
     return PanchangModel(
       date: date,
       cityName: city.name,
       tithi: tithiName,
       tithiPaksha: data['paksha']?.toString() ?? 'शुक्ल पक्ष (Shukla Paksha)',
+      tithiStartTime: _formatSpanDateTime(tithiSpan.startTime),
+      tithiEndTime: _formatSpanDateTime(tithiSpan.endTime),
+      nextTithi: _tithiNamesHi[nextTithiIdx],
+      nextTithiGujarati: _tithiNamesGu[nextTithiIdx],
       nakshatra: nakshatraName,
+      nakshatraStartTime: _formatSpanDateTime(nakshatraSpan.startTime),
+      nakshatraEndTime: _formatSpanDateTime(nakshatraSpan.endTime),
+      nextNakshatra: _nakshatraNamesHi[nextNakshatraIdx],
+      nextNakshatraGujarati: _nakshatraNamesGu[nextNakshatraIdx],
       yoga: yogaName,
+      yogaStartTime: _formatSpanDateTime(yogaSpan.startTime),
+      yogaEndTime: _formatSpanDateTime(yogaSpan.endTime),
+      nextYoga: _yogaNamesHi[nextYogaIdx],
+      nextYogaGujarati: _yogaNamesGu[nextYogaIdx],
       karana: karanaName,
+      karanaStartTime: _formatSpanDateTime(karanaSpan.startTime),
+      karanaEndTime: _formatSpanDateTime(karanaSpan.endTime),
+      nextKarana: nextKarana.hi,
+      nextKaranaGujarati: nextKarana.gu,
+      rashi: _rashiNamesHi[rashiIdx],
+      rashiGujarati: _rashiNamesGu[rashiIdx],
+      rashiStartTime: _formatSpanDateTime(rashiSpan.startTime),
+      rashiEndTime: _formatSpanDateTime(rashiSpan.endTime),
+      nextRashi: _rashiNamesHi[nextRashiIdx],
+      nextRashiGujarati: _rashiNamesGu[nextRashiIdx],
       vaar: _getVaar(date.weekday),
+      vaarStartTime: sunTimes.sunrise,
+      vaarEndTime: nextSunTimes.sunrise,
+      nextVaar: _getVaar(nextWeekday),
+      nextVaarGujarati: _getVaarGu(nextWeekday),
       sunrise: data['sunrise']?.toString() ?? sunTimes.sunrise,
       sunset: data['sunset']?.toString() ?? sunTimes.sunset,
       moonrise: data['moonrise']?.toString() ?? moonTimes.moonrise,
@@ -254,10 +333,20 @@ class PanchangRepository {
     );
   }
 
-  static PanchangModel calculateVedicPanchang(DateTime date, CityLocation city) {
-    // Days since J2000 epoch at local Sunrise (06:00 AM IST = 00:30 UTC)
-    final utcSunrise = DateTime.utc(date.year, date.month, date.day, 0, 30);
-    final d = utcSunrise.difference(DateTime.utc(2000, 1, 1, 12, 0)).inSeconds / 86400.0;
+  static String _formatSpanDateTime(DateTime dt) {
+    return DateFormat('dd MMM, hh:mm a').format(dt.toLocal());
+  }
+
+  static ({
+    double sunLong,
+    double moonLong,
+    double tithiAngle,
+    double nakshatraAngle,
+    double yogaAngle,
+    double rashiAngle,
+  }) _calculateAnglesAt(DateTime dt) {
+    final utc = dt.isUtc ? dt : dt.toUtc();
+    final d = utc.difference(DateTime.utc(2000, 1, 1, 12, 0)).inSeconds / 86400.0;
 
     // Mean Sun Longitude
     final sunMeanLong = (280.460 + 0.9856474 * d) % 360;
@@ -270,73 +359,272 @@ class PanchangRepository {
     final moonEclipticLong = (moonMeanLong + 6.289 * math.sin(moonMeanAnomaly)) % 360;
 
     // Lahiri Ayanamsha
-    final yearsSince2000 = date.year - 2000 + (date.month - 1) / 12.0;
+    final yearsSince2000 = (dt.year - 2000) + (dt.month - 1) / 12.0 + (dt.day - 1) / 365.25;
     final ayanamsha = 23.85 + 0.01397 * yearsSince2000;
 
     // Sidereal Positions
     final siderealSunLong = (sunEclipticLong - ayanamsha + 360) % 360;
     final siderealMoonLong = (moonEclipticLong - ayanamsha + 360) % 360;
 
-    // 1. Tithi Calculation: (Moon - Sun) / 12 degrees
     final tithiAngle = (siderealMoonLong - siderealSunLong + 360) % 360;
-    final tithiIndex = (tithiAngle / 12).floor() % 30; // 0 to 29
-    final isShukla = tithiIndex < 15;
-    final tithiNumberInPaksha = (tithiIndex % 15) + 1; // 1 to 15
+    final nakshatraAngle = siderealMoonLong;
+    final yogaAngle = (siderealSunLong + siderealMoonLong) % 360;
+    final rashiAngle = siderealMoonLong;
 
-    final tithiNames = [
-      'प्रतिपदा (Pratipada)',
-      'द्वितीया (Dwitiya)',
-      'तृतीया (Tritiya)',
-      'चतुर्थी (Chaturthi)',
-      'पञ्चमी (Panchami)',
-      'षष्ठी (Shashthi)',
-      'सप्तमी (Saptami)',
-      'अष्टमी (Ashtami)',
-      'नवमी (Navami)',
-      'दशमी (Dashami)',
-      'एकादशी (Ekadashi)',
-      'द्वादशी (Dwadashi)',
-      'त्रयोदशी (Trayodashi)',
-      'चतुर्दशी (Chaturdashi)',
-      isShukla ? 'पूर्णिमा (Purnima)' : 'अमावस्या (Amavasya)',
-    ];
+    return (
+      sunLong: siderealSunLong,
+      moonLong: siderealMoonLong,
+      tithiAngle: tithiAngle,
+      nakshatraAngle: nakshatraAngle,
+      yogaAngle: yogaAngle,
+      rashiAngle: rashiAngle,
+    );
+  }
 
-    String displayTithi;
-    if (tithiNumberInPaksha == 15) {
-      displayTithi = isShukla ? 'पूर्णिमा (Purnima)' : 'अमावस्या (Amavasya)';
-    } else {
-      displayTithi = '${isShukla ? 'शुक्ल' : 'कृष्ण'} ${tithiNames[tithiNumberInPaksha - 1]}';
+  static ({DateTime startTime, DateTime endTime}) _calculateSpanForAngle({
+    required DateTime refDateTime,
+    required double stepDegrees,
+    required double Function(DateTime) angleGetter,
+    Duration maxBack = const Duration(hours: 36),
+    Duration maxForward = const Duration(hours: 36),
+  }) {
+    final curAngle = angleGetter(refDateTime);
+    final curIndex = (curAngle / stepDegrees).floor();
+    final startTarget = (curIndex * stepDegrees) % 360;
+    final endTarget = ((curIndex + 1) * stepDegrees) % 360;
+
+    double getUnwrappedAngle(DateTime t) {
+      final a = angleGetter(t);
+      double delta = a - curAngle;
+      while (delta > 180) {
+        delta -= 360;
+      }
+      while (delta < -180) {
+        delta += 360;
+      }
+      return curAngle + delta;
     }
 
-    // 2. Nakshatra Calculation: Moon Longitude / 13° 20' (13.3333°)
-    final nakshatraNames = [
-      'अश्विनी (Ashwini)', 'भरणी (Bharani)', 'कृत्तिका (Krittika)', 'रोहिणी (Rohini)',
-      'मृगशिरा (Mrigashira)', 'आर्द्रा (Ardra)', 'पुनर्वसु (Punarvasu)', 'पुष्य (Pushya)',
-      'आश्लेषा (Ashlesha)', 'मघा (Magha)', 'पूर्वाफाल्गुनी (Purva Phalguni)', 'उत्तराफाल्गुनी (Uttara Phalguni)',
-      'हस्त (Hasta)', 'चित्रा (Chitra)', 'स्वाति (Swati)', 'विशाखा (Vishakha)',
-      'अनुराधा (Anuradha)', 'ज्येष्ठा (Jyeshtha)', 'मूल (Mula)', 'पूर्वाषाढ़ा (Purva Ashadha)',
-      'उत्तराषाढ़ा (Uttara Ashadha)', 'श्रवण (Shravana)', 'धनिष्ठा (Dhanishta)', 'शतभिषा (Shatabhisha)',
-      'पूर्वाभाद्रपद (Purva Bhadrapada)', 'उत्तराभाद्रपद (Uttara Bhadrapada)', 'रेवती (Revati)',
+    double getTargetUnwrapped(double target) {
+      double delta = target - curAngle;
+      while (delta > 180) {
+        delta -= 360;
+      }
+      while (delta < -180) {
+        delta += 360;
+      }
+      return curAngle + delta;
+    }
+
+    final unwrappedStartTarget = getTargetUnwrapped(startTarget);
+    final unwrappedEndTarget = getTargetUnwrapped(endTarget);
+
+    DateTime lowStart = refDateTime.subtract(maxBack);
+    DateTime highStart = refDateTime;
+    for (int i = 0; i < 18; i++) {
+      final midMillis = (lowStart.millisecondsSinceEpoch + highStart.millisecondsSinceEpoch) ~/ 2;
+      final mid = DateTime.fromMillisecondsSinceEpoch(midMillis, isUtc: refDateTime.isUtc);
+      final a = getUnwrappedAngle(mid);
+      if (a < unwrappedStartTarget) {
+        lowStart = mid;
+      } else {
+        highStart = mid;
+      }
+    }
+    final startTime = highStart;
+
+    DateTime lowEnd = refDateTime;
+    DateTime highEnd = refDateTime.add(maxForward);
+    for (int i = 0; i < 18; i++) {
+      final midMillis = (lowEnd.millisecondsSinceEpoch + highEnd.millisecondsSinceEpoch) ~/ 2;
+      final mid = DateTime.fromMillisecondsSinceEpoch(midMillis, isUtc: refDateTime.isUtc);
+      final a = getUnwrappedAngle(mid);
+      if (a < unwrappedEndTarget) {
+        lowEnd = mid;
+      } else {
+        highEnd = mid;
+      }
+    }
+    final endTime = lowEnd;
+
+    return (startTime: startTime, endTime: endTime);
+  }
+
+  static const List<String> _tithiNamesHi = [
+    'शुक्ल प्रतिपदा (Pratipada)', 'शुक्ल द्वितीया (Dwitiya)', 'शुक्ल तृतीया (Tritiya)', 'शुक्ल चतुर्थी (Chaturthi)',
+    'शुक्ल पञ्चमी (Panchami)', 'शुक्ल षष्ठी (Shashthi)', 'शुक्ल सप्तमी (Saptami)', 'शुक्ल अष्टमी (Ashtami)',
+    'शुक्ल नवमी (Navami)', 'शुक्ल दशमी (Dashami)', 'शुक्ल एकादशी (Ekadashi)', 'शुक्ल द्वादशी (Dwadashi)',
+    'शुक्ल त्रयोदशी (Trayodashi)', 'शुक्ल चतुर्दशी (Chaturdashi)', 'पूर्णिमा (Purnima)',
+    'कृष्ण प्रतिपदा (Pratipada)', 'कृष्ण द्वितीया (Dwitiya)', 'कृष्ण तृतीया (Tritiya)', 'कृष्ण चतुर्थी (Chaturthi)',
+    'कृष्ण पञ्चमी (Panchami)', 'कृष्ण षष्ठी (Shashthi)', 'कृष्ण सप्तमी (Saptami)', 'कृष्ण अष्टमी (Ashtami)',
+    'कृष्ण नवमी (Navami)', 'कृष्ण दशमी (Dashami)', 'कृष्ण एकादशी (Ekadashi)', 'कृष्ण द्वादशी (Dwadashi)',
+    'कृष्ण त्रयोदशी (Trayodashi)', 'कृष्ण चतुर्दशी (Chaturdashi)', 'अमावस्या (Amavasya)',
+  ];
+
+  static const List<String> _tithiNamesGu = [
+    'સુદ પડવો (Pratipada)', 'સુદ બીજ (Dwitiya)', 'સુદ ત્રીજ (Tritiya)', 'સુદ ચોથ (Chaturthi)',
+    'સુદ પાંચમ (Panchami)', 'સુદ છઠ (Shashthi)', 'સુદ સાતમ (Saptami)', 'સુદ આઠમ (Ashtami)',
+    'સુદ નોમ (Navami)', 'સુદ દસમ (Dashami)', 'સુદ અગિયારસ (Ekadashi)', 'સુદ બારસ (Dwadashi)',
+    'સુદ તેરસ (Trayodashi)', 'સુદ ચૌદશ (Chaturdashi)', 'પૂનમ (Purnima)',
+    'વદ પડવો (Pratipada)', 'વદ બીજ (Dwitiya)', 'વદ ત્રીજ (Tritiya)', 'વદ ચોથ (Chaturthi)',
+    'વદ પાંચમ (Panchami)', 'વદ છઠ (Shashthi)', 'વદ સાતમ (Saptami)', 'વદ આઠમ (Ashtami)',
+    'વદ નોમ (Navami)', 'વદ દસમ (Dashami)', 'વદ અગિયારસ (Ekadashi)', 'વદ બારસ (Dwadashi)',
+    'વદ તેરસ (Trayodashi)', 'વદ ચૌદશ (Chaturdashi)', 'અમાસ (Amavasya)',
+  ];
+
+  static const List<String> _nakshatraNamesHi = [
+    'अश्विनी (Ashwini)', 'भरणी (Bharani)', 'कृत्तिका (Krittika)', 'रोहिणी (Rohini)',
+    'मृगशिरा (Mrigashira)', 'आर्द्रा (Ardra)', 'पुनर्वसु (Punarvasu)', 'पुष्य (Pushya)',
+    'आश्लेषा (Ashlesha)', 'मघा (Magha)', 'पूर्वाफाल्गुनी (Purva Phalguni)', 'उत्तराफाल्गुनी (Uttara Phalguni)',
+    'हस्त (Hasta)', 'चित्रा (Chitra)', 'स्वाति (Swati)', 'विशाखा (Vishakha)',
+    'अनुराधा (Anuradha)', 'ज्येष्ठा (Jyeshtha)', 'मूल (Mula)', 'पूर्वाषाढ़ा (Purva Ashadha)',
+    'उत्तराषाढ़ा (Uttara Ashadha)', 'श्रवण (Shravana)', 'धनिष्ठा (Dhanishta)', 'शतभिषा (Shatabhisha)',
+    'पूर्वाभाद्रपद (Purva Bhadrapada)', 'उत्तराभाद्रपद (Uttara Bhadrapada)', 'रेवती (Revati)',
+  ];
+
+  static const List<String> _nakshatraNamesGu = [
+    'અશ્વિની (Ashwini)', 'ભરણી (Bharani)', 'કૃત્તિકા (Krittika)', 'રોહિણી (Rohini)',
+    'મૃગશીર્ષ (Mrigashira)', 'આર્દ્રા (Ardra)', 'પુનર્વસુ (Punarvasu)', 'પુષ્ય (Pushya)',
+    'આશ્લેષા (Ashlesha)', 'મઘા (Magha)', 'પૂર્વા ફાલ્ગુની (Purva Phalguni)', 'ઉત્તરા ફાલ્ગુની (Uttara Phalguni)',
+    'હસ્ત (Hasta)', 'ચિત્રા (Chitra)', 'સ્વાતિ (Swati)', 'વિશાખા (Vishakha)',
+    'અનુરાધા (Anuradha)', 'જ્યેષ્ઠા (Jyeshtha)', 'મૂળ (Mula)', 'પૂર્વાષાઢા (Purva Ashadha)',
+    'ઉત્તરાષાઢા (Uttara Ashadha)', 'શ્રવણ (Shravana)', 'ધનિષ્ઠા (Dhanishta)', 'શતભિષા (Shatabhisha)',
+    'પૂર્વા ભાદ્રપદ (Purva Bhadrapada)', 'ઉત્તરા ભાદ્રપદ (Uttara Bhadrapada)', 'રેવતી (Revati)',
+  ];
+
+  static const List<String> _yogaNamesHi = [
+    'विष्कुम्भ (Vishkambha)', 'प्रीति (Priti)', 'आयुष्मान (Ayushman)', 'सौभाग्य (Saubhagya)',
+    'शोभन (Shobhana)', 'अतिगण्ड (Atiganda)', 'सुकर्मा (Sukarma)', 'धृति (Dhriti)',
+    'शूल (Shula)', 'गण्ड (Ganda)', 'वृद्धि (Vriddhi)', 'ध्रुव (Dhruva)', 'व्याघात (Vyaghata)',
+    'हर्षण (Harshana)', 'वज्र (Vajra)', 'सिद्धि (Siddhi)', 'व्यतीपात (Vyatipata)',
+    'वरीयान (Variyana)', 'परिघ (Parigha)', 'शिव (Shiva)', 'सिद्ध (Siddha)',
+    'साध्य (Sadhya)', 'शुभ (Shubha)', 'शुक्ल (Shukla)', 'ब्रह्म (Brahma)',
+    'इन्द्र (Indra)', 'वैधृति (Vaidhriti)'
+  ];
+
+  static const List<String> _yogaNamesGu = [
+    'વિષ્કુંભ (Vishkambha)', 'પ્રીતિ (Priti)', 'આયુષ્માન (Ayushman)', 'સૌભાગ્ય (Saubhagya)',
+    'શોભન (Shobhana)', 'અતિગંડ (Atiganda)', 'સુકર્મા (Sukarma)', 'ધૃતિ (Dhriti)',
+    'શૂલ (Shula)', 'ગંડ (Ganda)', 'વૃદ્ધિ (Vriddhi)', 'ધ્રુવ (Dhruva)', 'વ્યાઘાત (Vyaghata)',
+    'હર્ષણ (Harshana)', 'વજ્ર (Vajra)', 'સિદ્ધિ (Siddhi)', 'વ્યતીપાત (Vyatipata)',
+    'વરીયાન (Variyana)', 'પરિઘ (Parigha)', 'શિવ (Shiva)', 'સિદ્ધ (Siddha)',
+    'સાધ્ય (Sadhya)', 'શુભ (Shubha)', 'શુક્લ (Shukla)', 'બ્રહ્મ (Brahma)',
+    'ઇન્દ્ર (Indra)', 'વૈધૃતિ (Vaidhriti)'
+  ];
+
+  static const List<String> _rashiNamesHi = [
+    'मेष (Aries)', 'वृषभ (Taurus)', 'मिथुन (Gemini)', 'कर्क (Cancer)',
+    'सिंह (Leo)', 'कन्या (Virgo)', 'तुला (Libra)', 'वृश्चिक (Scorpio)',
+    'धनु (Sagittarius)', 'मकर (Capricorn)', 'कुम्भ (Aquarius)', 'मीन (Pisces)'
+  ];
+
+  static const List<String> _rashiNamesGu = [
+    'મેષ (Aries)', 'વૃષભ (Taurus)', 'મિથુન (Gemini)', 'કર્ક (Cancer)',
+    'સિંહ (Leo)', 'કન્યા (Virgo)', 'તુલા (Libra)', 'વૃશ્ચિક (Scorpio)',
+    'ધન (Sagittarius)', 'મકર (Capricorn)', 'કુંભ (Aquarius)', 'મીન (Pisces)'
+  ];
+
+  static ({String hi, String gu}) _getKaranaName(int karanaIndex) {
+    final idx = (karanaIndex % 60 + 60) % 60;
+    if (idx == 0) return (hi: 'किंस्तुघ्न (Kinstughna)', gu: 'કિંસ્તુઘ્ન (Kinstughna)');
+    if (idx == 57) return (hi: 'शकुनि (Shakuni)', gu: 'શકુનિ (Shakuni)');
+    if (idx == 58) return (hi: 'चतुष्पाद (Chatushpada)', gu: 'ચતુષ્પાદ (Chatushpada)');
+    if (idx == 59) return (hi: 'नाग (Naga)', gu: 'નાગ (Naga)');
+
+    const movableHi = [
+      'बव (Bava)', 'बालव (Balava)', 'कौलव (Kaulava)', 'तैतिल (Taitila)',
+      'गर (Gara)', 'वणिज (Vanija)', 'विष्टि/भद्रा (Vishti)'
     ];
-    final nakshatraIdx = (siderealMoonLong / (360 / 27)).floor() % 27;
-
-    // 3. Yoga Calculation: (Sun + Moon) / 13° 20'
-    final yogaNames = [
-      'विष्कुम्भ (Vishkambha)', 'प्रीति (Priti)', 'आयुष्मान (Ayushman)', 'सौभाग्य (Saubhagya)',
-      'शोभन (Shobhana)', 'अतिगण्ड (Atiganda)', 'सुकर्मा (Sukarma)', 'धृति (Dhriti)',
-      'शूल (Shula)', 'गण्ड (Ganda)', 'वृद्धि (Vriddhi)', 'ध्रुव (Dhruva)', 'व्याघात (Vyaghata)',
-      'हर्षण (Harshana)', 'वज्र (Vajra)', 'सिद्धि (Siddhi)', 'व्यतीपात (Vyatipata)',
-      'वरीयान (Variyana)', 'परिघ (Parigha)', 'शिव (Shiva)', 'सिद्ध (Siddha)',
-      'साध्य (Sadhya)', 'शुभ (Shubha)', 'शुक्ल (Shukla)', 'ब्रह्म (Brahma)',
-      'इन्द्र (Indra)', 'वैधृति (Vaidhriti)'
+    const movableGu = [
+      'બવ (Bava)', 'બાલવ (Balava)', 'કૌલવ (Kaulava)', 'તૈતિલ (Taitila)',
+      'ગર (Gara)', 'વણિજ (Vanija)', 'વિષ્ટિ/ભદ્રા (Vishti)'
     ];
-    final yogaIdx = (((siderealSunLong + siderealMoonLong) % 360) / (360 / 27)).floor() % 27;
+    final mIdx = (idx - 1) % 7;
+    return (hi: movableHi[mIdx], gu: movableGu[mIdx]);
+  }
 
-    // 4. Karana Calculation: Half-Tithi (6° per Karana)
-    final karanaIdx = _calculateKarana(tithiIndex);
+  static String _getVaarGu(int weekday) {
+    switch (weekday) {
+      case 1: return 'સોમવાર (Monday)';
+      case 2: return 'મંગળવાર (Tuesday)';
+      case 3: return 'બુધવાર (Wednesday)';
+      case 4: return 'ગુરુવાર (Thursday)';
+      case 5: return 'શુક્રવાર (Friday)';
+      case 6: return 'શનિવાર (Saturday)';
+      case 7:
+      default: return 'રવિવાર (Sunday)';
+    }
+  }
 
-    // 5. Dynamic Sun & Moon Times
+  static PanchangModel calculateVedicPanchang(DateTime date, CityLocation city) {
     final sunTimes = _calculateSunTimes(date, city);
+    final nextSunTimes = _calculateSunTimes(date.add(const Duration(days: 1)), city);
+
+    final refLocalTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      sunTimes.sunriseMinutes ~/ 60,
+      sunTimes.sunriseMinutes % 60,
+    );
+
+    final angles = _calculateAnglesAt(refLocalTime);
+    final tithiAngle = angles.tithiAngle;
+
+    // 1. Tithi Calculation & Timing Spans
+    final tithiIndex = (tithiAngle / 12.0).floor() % 30;
+    final isShukla = tithiIndex < 15;
+    final displayTithi = _tithiNamesHi[tithiIndex];
+    final tithiSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 12.0,
+      angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
+    );
+    final nextTithiIdx = (tithiIndex + 1) % 30;
+
+    // 2. Nakshatra Calculation & Timing Spans
+    final nakshatraIdx = (angles.nakshatraAngle / (360.0 / 27.0)).floor() % 27;
+    final nakshatraSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 360.0 / 27.0,
+      angleGetter: (t) => _calculateAnglesAt(t).nakshatraAngle,
+    );
+    final nextNakshatraIdx = (nakshatraIdx + 1) % 27;
+
+    // 3. Yoga Calculation & Timing Spans
+    final yogaIdx = (angles.yogaAngle / (360.0 / 27.0)).floor() % 27;
+    final yogaSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 360.0 / 27.0,
+      angleGetter: (t) => _calculateAnglesAt(t).yogaAngle,
+    );
+    final nextYogaIdx = (yogaIdx + 1) % 27;
+
+    // 4. Karana Calculation & Timing Spans
+    final karanaFullIdx = (tithiAngle / 6.0).floor() % 60;
+    final curKarana = _getKaranaName(karanaFullIdx);
+    final nextKarana = _getKaranaName(karanaFullIdx + 1);
+    final karanaSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 6.0,
+      angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
+    );
+
+    // 5. Chandra Rashi (Moon Sign) & Timing Spans
+    final rashiIdx = (angles.rashiAngle / 30.0).floor() % 12;
+    final rashiSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 30.0,
+      angleGetter: (t) => _calculateAnglesAt(t).rashiAngle,
+      maxBack: const Duration(hours: 60),
+      maxForward: const Duration(hours: 60),
+    );
+    final nextRashiIdx = (rashiIdx + 1) % 12;
+
+    // 6. Vaar Timing (Sunrise to Next Sunrise)
+    final nextWeekday = (date.weekday % 7) + 1;
+
+    // 7. Dynamic Sun & Moon Times
     final moonTimes = _calculateMoonTimes(date, sunTimes.sunriseMinutes, sunTimes.sunsetMinutes, tithiAngle);
 
     return PanchangModel(
@@ -344,10 +632,36 @@ class PanchangRepository {
       cityName: city.name,
       tithi: displayTithi,
       tithiPaksha: isShukla ? 'शुक्ल पक्ष (Shukla Paksha)' : 'कृष्ण पक्ष (Krishna Paksha)',
-      nakshatra: nakshatraNames[nakshatraIdx],
-      yoga: yogaNames[yogaIdx],
-      karana: karanaIdx,
+      tithiStartTime: _formatSpanDateTime(tithiSpan.startTime),
+      tithiEndTime: _formatSpanDateTime(tithiSpan.endTime),
+      nextTithi: _tithiNamesHi[nextTithiIdx],
+      nextTithiGujarati: _tithiNamesGu[nextTithiIdx],
+      nakshatra: _nakshatraNamesHi[nakshatraIdx],
+      nakshatraStartTime: _formatSpanDateTime(nakshatraSpan.startTime),
+      nakshatraEndTime: _formatSpanDateTime(nakshatraSpan.endTime),
+      nextNakshatra: _nakshatraNamesHi[nextNakshatraIdx],
+      nextNakshatraGujarati: _nakshatraNamesGu[nextNakshatraIdx],
+      yoga: _yogaNamesHi[yogaIdx],
+      yogaStartTime: _formatSpanDateTime(yogaSpan.startTime),
+      yogaEndTime: _formatSpanDateTime(yogaSpan.endTime),
+      nextYoga: _yogaNamesHi[nextYogaIdx],
+      nextYogaGujarati: _yogaNamesGu[nextYogaIdx],
+      karana: curKarana.hi,
+      karanaStartTime: _formatSpanDateTime(karanaSpan.startTime),
+      karanaEndTime: _formatSpanDateTime(karanaSpan.endTime),
+      nextKarana: nextKarana.hi,
+      nextKaranaGujarati: nextKarana.gu,
+      rashi: _rashiNamesHi[rashiIdx],
+      rashiGujarati: _rashiNamesGu[rashiIdx],
+      rashiStartTime: _formatSpanDateTime(rashiSpan.startTime),
+      rashiEndTime: _formatSpanDateTime(rashiSpan.endTime),
+      nextRashi: _rashiNamesHi[nextRashiIdx],
+      nextRashiGujarati: _rashiNamesGu[nextRashiIdx],
       vaar: _getVaar(date.weekday),
+      vaarStartTime: sunTimes.sunrise,
+      vaarEndTime: nextSunTimes.sunrise,
+      nextVaar: _getVaar(nextWeekday),
+      nextVaarGujarati: _getVaarGu(nextWeekday),
       sunrise: sunTimes.sunrise,
       sunset: sunTimes.sunset,
       moonrise: moonTimes.moonrise,
@@ -364,20 +678,6 @@ class PanchangRepository {
       ayana: date.month >= 7 ? 'दक्षिणायन (Dakshinayana)' : 'उत्तरायण (Uttarayana)',
       isFromCache: false,
     );
-  }
-
-  static String _calculateKarana(int tithiIndex) {
-    final karanaNames = [
-      'बव (Bava)', 'बालव (Balava)', 'कौलव (Kaulava)', 'तैतिल (Taitila)',
-      'गर (Gara)', 'वणिज (Vanija)', 'विष्टि/भद्रा (Vishti)'
-    ];
-
-    if (tithiIndex == 0) return 'किंस्तुघ्न (Kinstughna)';
-    if (tithiIndex == 28) return 'शकुनि (Shakuni)';
-    if (tithiIndex == 29) return 'चतुष्पाद (Chatushpada)';
-
-    final movableIdx = (tithiIndex * 2) % 7;
-    return karanaNames[movableIdx];
   }
 
   static String _getVaar(int weekday) {
@@ -826,19 +1126,20 @@ class PanchangRepository {
     DateTime birthDateTime,
     CityLocation city,
   ) {
-    // Fractional days from J2000 epoch
-    final d = birthDateTime.difference(DateTime.utc(2000, 1, 1, 12, 0)).inSeconds / 86400.0;
+    final angles = _calculateAnglesAt(birthDateTime);
+    final siderealMoonLong = angles.moonLong;
+    final tithiAngle = angles.tithiAngle;
 
-    // Mean & Sidereal Moon Longitude
-    final moonMeanLong = (218.316 + 13.176396 * d) % 360;
-    final moonMeanAnomaly = (134.963 + 13.064993 * d) * (math.pi / 180);
-    final moonEclipticLong = (moonMeanLong + 6.289 * math.sin(moonMeanAnomaly)) % 360;
-
-    final ayanamsha = 23.85 + 0.01397 * (birthDateTime.year - 2000 + (birthDateTime.month - 1) / 12.0);
-    final siderealMoonLong = (moonEclipticLong - ayanamsha + 360) % 360;
-
-    // Janma Rashi (0 to 11)
+    // 1. Janma Rashi (0 to 11) & Timing Spans
     final rashiIdx = (siderealMoonLong / 30.0).floor() % 12;
+    final rashiSpan = _calculateSpanForAngle(
+      refDateTime: birthDateTime,
+      stepDegrees: 30.0,
+      angleGetter: (t) => _calculateAnglesAt(t).rashiAngle,
+      maxBack: const Duration(hours: 60),
+      maxForward: const Duration(hours: 60),
+    );
+    final nextRashiIdx = (rashiIdx + 1) % 12;
 
     const rashiData = [
       ('मेष', 'મેષ', 'Aries', '♈', 'मंगल (Mars)', 'મંગળ (Mars)', 'अग्नि (Fire)', 'અગ્નિ (Fire)', 'लाल / नारंगी', 'લાલ / નારંગી', 'मूंगा (Red Coral)', 'પરવાળું (Red Coral)', 'देव', 'દેવ', 'मध्य', 'મધ્ય'),
@@ -856,32 +1157,52 @@ class PanchangRepository {
     ];
 
     final rInfo = rashiData[rashiIdx];
+    final nextRInfo = rashiData[nextRashiIdx];
 
-    // Janma Nakshatra (0 to 26) & Pada (1 to 4)
+    // 2. Janma Nakshatra (0 to 26) & Pada (1 to 4) & Timing Spans
     final nakshatraDeg = 360.0 / 27.0; // 13.3333°
     final nakshatraIdx = (siderealMoonLong / nakshatraDeg).floor() % 27;
     final padaDeg = nakshatraDeg / 4.0; // 3.3333°
     final pada = ((siderealMoonLong % nakshatraDeg) / padaDeg).floor() + 1;
+    final nakshatraSpan = _calculateSpanForAngle(
+      refDateTime: birthDateTime,
+      stepDegrees: nakshatraDeg,
+      angleGetter: (t) => _calculateAnglesAt(t).nakshatraAngle,
+    );
+    final nextNakshatraIdx = (nakshatraIdx + 1) % 27;
 
-    const nakshatraNames = [
-      'अश्विनी (Ashwini)', 'भरणी (Bharani)', 'कृत्तिका (Krittika)', 'रोहिणी (Rohini)',
-      'मृगशिरा (Mrigashira)', 'आर्द्रा (Ardra)', 'पुनर्वसु (Punarvasu)', 'पुष्य (Pushya)',
-      'आश्लेषा (Ashlesha)', 'मघा (Magha)', 'पूर्वाफाल्गुनी (Purva Phalguni)', 'उत्तराफाल्गुनी (Uttara Phalguni)',
-      'हस्त (Hasta)', 'चित्रा (Chitra)', 'स्वाति (Swati)', 'विशाखा (Vishakha)',
-      'अनुराधा (Anuradha)', 'ज्येष्ठा (Jyeshtha)', 'मूल (Mula)', 'पूर्वाषाढ़ा (Purva Ashadha)',
-      'उत्तराषाढ़ा (Uttara Ashadha)', 'श्रवण (Shravana)', 'धनिष्ठा (Dhanishta)', 'शतभिषा (Shatabhisha)',
-      'पूर्वाभाद्रपद (Purva Bhadrapada)', 'उत्तराभाद्रपद (Uttara Bhadrapada)', 'रेवती (Revati)',
-    ];
+    // 3. Tithi at Birth Time
+    final tithiIndex = (tithiAngle / 12.0).floor() % 30;
+    final tithiSpan = _calculateSpanForAngle(
+      refDateTime: birthDateTime,
+      stepDegrees: 12.0,
+      angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
+    );
+    final nextTithiIdx = (tithiIndex + 1) % 30;
 
-    const nakshatraNamesGujarati = [
-      'અશ્વિની (Ashwini)', 'ભરણી (Bharani)', 'કૃત્તિકા (Krittika)', 'રોહિણી (Rohini)',
-      'મૃગશીર્ષ (Mrigashira)', 'આર્દ્રા (Ardra)', 'પુનર્વસુ (Punarvasu)', 'પુષ્ય (Pushya)',
-      'આશ્લેષા (Ashlesha)', 'મઘા (Magha)', 'પૂર્વા ફાલ્ગુની (Purva Phalguni)', 'ઉત્તરા ફાલ્ગુની (Uttara Phalguni)',
-      'હસ્ત (Hasta)', 'ચિત્રા (Chitra)', 'સ્વાતિ (Swati)', 'વિશાખા (Vishakha)',
-      'અનુરાધા (Anuradha)', 'જ્યેષ્ઠા (Jyeshtha)', 'મૂળ (Mula)', 'પૂર્વાષાઢા (Purva Ashadha)',
-      'ઉત્તરાષાઢા (Uttara Ashadha)', 'શ્રવણ (Shravana)', 'ધનિષ્ઠા (Dhanishta)', 'શતભિષા (Shatabhisha)',
-      'પૂર્વા ભાદ્રપદ (Purva Bhadrapada)', 'ઉત્તરા ભાદ્રપદ (Uttara Bhadrapada)', 'રેવતી (Revati)',
-    ];
+    // 4. Yoga at Birth Time
+    final yogaIdx = (angles.yogaAngle / (360.0 / 27.0)).floor() % 27;
+    final yogaSpan = _calculateSpanForAngle(
+      refDateTime: birthDateTime,
+      stepDegrees: 360.0 / 27.0,
+      angleGetter: (t) => _calculateAnglesAt(t).yogaAngle,
+    );
+    final nextYogaIdx = (yogaIdx + 1) % 27;
+
+    // 5. Karana at Birth Time
+    final karanaFullIdx = (tithiAngle / 6.0).floor() % 60;
+    final curKarana = _getKaranaName(karanaFullIdx);
+    final nextKarana = _getKaranaName(karanaFullIdx + 1);
+    final karanaSpan = _calculateSpanForAngle(
+      refDateTime: birthDateTime,
+      stepDegrees: 6.0,
+      angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
+    );
+
+    // 6. Vaar at Birth Time
+    final sunTimes = _calculateSunTimes(birthDateTime, city);
+    final nextSunTimes = _calculateSunTimes(birthDateTime.add(const Duration(days: 1)), city);
+    final nextWeekday = (birthDateTime.weekday % 7) + 1;
 
     const namaksharDatabase = [
       ['चू / ચૂ (Chu)', 'चे / ચે (Che)', 'चो / ચો (Cho)', 'ला / લા (La)'],
@@ -922,9 +1243,42 @@ class PanchangRepository {
       rashiGujarati: rInfo.$2,
       rashiEn: rInfo.$3,
       rashiSymbol: rInfo.$4,
-      nakshatraHindi: nakshatraNames[nakshatraIdx],
-      nakshatraGujarati: nakshatraNamesGujarati[nakshatraIdx],
+      rashiStartTime: _formatSpanDateTime(rashiSpan.startTime),
+      rashiEndTime: _formatSpanDateTime(rashiSpan.endTime),
+      nextRashiHindi: nextRInfo.$1,
+      nextRashiGujarati: nextRInfo.$2,
+      nextRashiEn: nextRInfo.$3,
+      nakshatraHindi: _nakshatraNamesHi[nakshatraIdx],
+      nakshatraGujarati: _nakshatraNamesGu[nakshatraIdx],
       pada: pada,
+      nakshatraStartTime: _formatSpanDateTime(nakshatraSpan.startTime),
+      nakshatraEndTime: _formatSpanDateTime(nakshatraSpan.endTime),
+      nextNakshatraHindi: _nakshatraNamesHi[nextNakshatraIdx],
+      nextNakshatraGujarati: _nakshatraNamesGu[nextNakshatraIdx],
+      tithiHindi: _tithiNamesHi[tithiIndex],
+      tithiGujarati: _tithiNamesGu[tithiIndex],
+      tithiStartTime: _formatSpanDateTime(tithiSpan.startTime),
+      tithiEndTime: _formatSpanDateTime(tithiSpan.endTime),
+      nextTithiHindi: _tithiNamesHi[nextTithiIdx],
+      nextTithiGujarati: _tithiNamesGu[nextTithiIdx],
+      yogaHindi: _yogaNamesHi[yogaIdx],
+      yogaGujarati: _yogaNamesGu[yogaIdx],
+      yogaStartTime: _formatSpanDateTime(yogaSpan.startTime),
+      yogaEndTime: _formatSpanDateTime(yogaSpan.endTime),
+      nextYogaHindi: _yogaNamesHi[nextYogaIdx],
+      nextYogaGujarati: _yogaNamesGu[nextYogaIdx],
+      karanaHindi: curKarana.hi,
+      karanaGujarati: curKarana.gu,
+      karanaStartTime: _formatSpanDateTime(karanaSpan.startTime),
+      karanaEndTime: _formatSpanDateTime(karanaSpan.endTime),
+      nextKaranaHindi: nextKarana.hi,
+      nextKaranaGujarati: nextKarana.gu,
+      vaarHindi: _getVaar(birthDateTime.weekday),
+      vaarGujarati: _getVaarGu(birthDateTime.weekday),
+      vaarStartTime: sunTimes.sunrise,
+      vaarEndTime: nextSunTimes.sunrise,
+      nextVaarHindi: _getVaar(nextWeekday),
+      nextVaarGujarati: _getVaarGu(nextWeekday),
       rulingPlanet: rInfo.$5,
       rulingPlanetGujarati: rInfo.$6,
       element: rInfo.$7,

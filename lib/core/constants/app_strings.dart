@@ -54,11 +54,10 @@ class AppStrings {
   static String yamaganda(AppLanguage lang) => lang == AppLanguage.gujarati ? 'યમગંડ' : 'यमगण्ड';
   static String gulikai(AppLanguage lang) => lang == AppLanguage.gujarati ? 'ગુલિકા' : 'गुलिकाय';
   static String brahmaMuhurta(AppLanguage lang) => lang == AppLanguage.gujarati ? 'બ્રહ્મ મુહૂર્ત' : 'ब्रह्म मुहूर्त';
-  static String today(AppLanguage lang) => lang == AppLanguage.gujarati ? 'આજે' : 'आज';
-  static String yesterday(AppLanguage lang) => lang == AppLanguage.gujarati ? 'ગઈકાલે' : 'कल';
-  static String tomorrow(AppLanguage lang) => lang == AppLanguage.gujarati ? 'આવતીકાલે' : 'कल';
-
-  // Sun & Moon Tracker
+  static String startTime(AppLanguage lang) => lang == AppLanguage.gujarati ? 'પ્રારંભ' : 'प्रारम्भ';
+  static String endTime(AppLanguage lang) => lang == AppLanguage.gujarati ? 'સમાપ્તિ' : 'समाप्ति';
+  static String next(AppLanguage lang) => lang == AppLanguage.gujarati ? 'આગામી' : 'आगामी';
+  static String moonRashi(AppLanguage lang) => lang == AppLanguage.gujarati ? 'ચંદ્ર રાશિ' : 'चन्द्र राशि';
   static String sun(AppLanguage lang) => lang == AppLanguage.gujarati ? 'સૂર્ય (Sun)' : 'सूर्य (Sun)';
   static String moon(AppLanguage lang) => lang == AppLanguage.gujarati ? 'ચંદ્ર (Moon)' : 'चन्द्र (Moon)';
   static String sunriseLabel(AppLanguage lang) => lang == AppLanguage.gujarati ? 'સૂર્યોદય (Rise)' : 'सूर्योदय (Rise)';
@@ -113,6 +112,9 @@ class AppStrings {
   static String dailyPrediction(AppLanguage lang) => lang == AppLanguage.gujarati ? 'આજનું રાશિફળ' : 'आज का राशिफल';
   static String luckyNumber(AppLanguage lang) => lang == AppLanguage.gujarati ? 'લકી નંબર' : 'लकी नंबर';
   static String luckyColor(AppLanguage lang) => lang == AppLanguage.gujarati ? 'લકી કલર' : 'लकी कलर';
+  static String yesterday(AppLanguage lang) => lang == AppLanguage.gujarati ? 'ગઈકાલે' : 'बीता कल';
+  static String today(AppLanguage lang) => lang == AppLanguage.gujarati ? 'આજે' : 'आज';
+  static String tomorrow(AppLanguage lang) => lang == AppLanguage.gujarati ? 'આવતીકાલે' : 'कल';
 
   // Common
   static String retry(AppLanguage lang) => lang == AppLanguage.gujarati ? 'ફરી પ્રયાસ કરો' : 'पुनः प्रयास करें';

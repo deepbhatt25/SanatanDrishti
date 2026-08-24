@@ -22,6 +22,10 @@ class AdService with WidgetsBindingObserver {
   bool _isShowingFullScreenAd = false;
   bool get isShowingFullScreenAd => _isShowingFullScreenAd;
 
+  // Prevent App Open Ads from showing when the app resumes after dismissing another ad format
+  bool _suppressAppOpenOnNextResume = false;
+  DateTime? _lastFullScreenAdDismissedTime;
+
   // ---------------------------------------------------------------------------
   // 1. App Open Ad Manager
   // ---------------------------------------------------------------------------
@@ -89,7 +93,29 @@ class AdService with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Show App Open Ad on resume from background
+      // 1. Suppress App Open ad if resuming from an interstitial or rewarded ad
+      if (_suppressAppOpenOnNextResume) {
+        _suppressAppOpenOnNextResume = false;
+        debugPrint('AdService: AppOpenAd suppressed because app resumed from another ad dismissal.');
+        return;
+      }
+
+      // 2. Suppress App Open ad if any full-screen ad is currently active
+      if (_isShowingFullScreenAd) {
+        debugPrint('AdService: AppOpenAd suppressed because a full-screen ad is active.');
+        return;
+      }
+
+      // 3. Suppress App Open ad if another full-screen ad was dismissed very recently (safety buffer)
+      if (_lastFullScreenAdDismissedTime != null) {
+        final elapsed = DateTime.now().difference(_lastFullScreenAdDismissedTime!);
+        if (elapsed < const Duration(seconds: 15)) {
+          debugPrint('AdService: AppOpenAd suppressed due to recent ad dismissal (${elapsed.inSeconds}s ago).');
+          return;
+        }
+      }
+
+      // Show App Open Ad on genuine resume from background
       showAppOpenAdIfAvailable();
     }
   }
@@ -129,21 +155,36 @@ class AdService with WidgetsBindingObserver {
   }
 
   void showAppOpenAdIfAvailable({bool force = false}) {
-    if (_isShowingFullScreenAd) return;
+    if (_isShowingFullScreenAd || _suppressAppOpenOnNextResume) return;
 
-    // Check cooldown in production mode (in test mode, allow rapid testing)
-    if (!AdConfig.isTestMode && !force && _lastAppOpenAdShownTime != null) {
+    // Check recent ad dismissal buffer
+    if (!force && _lastFullScreenAdDismissedTime != null) {
+      final elapsed = DateTime.now().difference(_lastFullScreenAdDismissedTime!);
+      if (elapsed < const Duration(seconds: 15)) {
+        debugPrint('AdService: AppOpenAd skipped due to recent ad dismissal buffer (${elapsed.inSeconds}s ago)');
+        return;
+      }
+    }
+
+    // Check cooldown: in production mode 4 hours, in test mode 30 seconds
+    if (!force && _lastAppOpenAdShownTime != null) {
       final elapsed = DateTime.now().difference(_lastAppOpenAdShownTime!);
-      if (elapsed < _appOpenCooldown) {
-        debugPrint('AdService: AppOpenAd skipped due to cooldown (${elapsed.inMinutes}m / ${_appOpenCooldown.inMinutes}m)');
+      final requiredCooldown = AdConfig.isTestMode ? const Duration(seconds: 30) : _appOpenCooldown;
+      if (elapsed < requiredCooldown) {
+        debugPrint('AdService: AppOpenAd skipped due to cooldown (${elapsed.inSeconds}s / ${requiredCooldown.inSeconds}s)');
         return;
       }
     }
 
     if (!isAppOpenAdAvailable) {
-      loadAppOpenAd(onLoaded: () {
-        showAppOpenAdIfAvailable(force: force);
-      });
+      if (force) {
+        loadAppOpenAd(onLoaded: () {
+          showAppOpenAdIfAvailable(force: force);
+        });
+      } else {
+        // Preload for next resume without disrupting current user session
+        loadAppOpenAd();
+      }
       return;
     }
 
@@ -154,6 +195,7 @@ class AdService with WidgetsBindingObserver {
       },
       onAdDismissedFullScreenContent: (ad) {
         _isShowingFullScreenAd = false;
+        _lastFullScreenAdDismissedTime = DateTime.now();
         ad.dispose();
         _appOpenAd = null;
         loadAppOpenAd();
@@ -229,11 +271,14 @@ class AdService with WidgetsBindingObserver {
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _isShowingFullScreenAd = true;
+        _suppressAppOpenOnNextResume = true;
         _lastInterstitialShownTime = DateTime.now();
         _actionCountSinceLastAd = 0;
       },
       onAdDismissedFullScreenContent: (ad) {
         _isShowingFullScreenAd = false;
+        _suppressAppOpenOnNextResume = true;
+        _lastFullScreenAdDismissedTime = DateTime.now();
         ad.dispose();
         _interstitialAd = null;
         loadInterstitialAd();
@@ -241,6 +286,7 @@ class AdService with WidgetsBindingObserver {
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         _isShowingFullScreenAd = false;
+        _suppressAppOpenOnNextResume = false;
         ad.dispose();
         _interstitialAd = null;
         loadInterstitialAd();
@@ -318,9 +364,12 @@ class AdService with WidgetsBindingObserver {
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _isShowingFullScreenAd = true;
+        _suppressAppOpenOnNextResume = true;
       },
       onAdDismissedFullScreenContent: (ad) {
         _isShowingFullScreenAd = false;
+        _suppressAppOpenOnNextResume = true;
+        _lastFullScreenAdDismissedTime = DateTime.now();
         ad.dispose();
         _rewardedAd = null;
         loadRewardedAd();
@@ -328,6 +377,7 @@ class AdService with WidgetsBindingObserver {
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         _isShowingFullScreenAd = false;
+        _suppressAppOpenOnNextResume = false;
         ad.dispose();
         _rewardedAd = null;
         loadRewardedAd();
@@ -409,9 +459,12 @@ class AdService with WidgetsBindingObserver {
     _rewardedInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _isShowingFullScreenAd = true;
+        _suppressAppOpenOnNextResume = true;
       },
       onAdDismissedFullScreenContent: (ad) {
         _isShowingFullScreenAd = false;
+        _suppressAppOpenOnNextResume = true;
+        _lastFullScreenAdDismissedTime = DateTime.now();
         ad.dispose();
         _rewardedInterstitialAd = null;
         loadRewardedInterstitialAd();
@@ -419,6 +472,7 @@ class AdService with WidgetsBindingObserver {
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         _isShowingFullScreenAd = false;
+        _suppressAppOpenOnNextResume = false;
         ad.dispose();
         _rewardedInterstitialAd = null;
         loadRewardedInterstitialAd();
