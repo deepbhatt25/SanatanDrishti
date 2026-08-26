@@ -169,36 +169,42 @@ class KundaliPdfService {
         final page3Bytes = await _renderWidgetToImage(
           KundaliPdfA4Pages.buildPage3(kundali: kundali, isGujarati: isGujarati),
         );
+        final page4Bytes = await _renderWidgetToImage(
+          KundaliPdfA4Pages.buildPage4(kundali: kundali, isGujarati: isGujarati),
+        );
+        final page5Bytes = await _renderWidgetToImage(
+          KundaliPdfA4Pages.buildPage5(kundali: kundali, isGujarati: isGujarati),
+        );
 
-        if (page1Bytes != null && page2Bytes != null && page3Bytes != null) {
+        if (page1Bytes != null && page2Bytes != null && page3Bytes != null && page4Bytes != null && page5Bytes != null) {
           final pdf = pw.Document(
             title: 'SanatanDrishti - Kundali ${kundali.profile.name}',
             author: 'SanatanDrishti Vedic Astrological System',
           );
 
-        for (final pageBytes in [page1Bytes, page2Bytes, page3Bytes]) {
-          pdf.addPage(
-            pw.Page(
-              pageFormat: PdfPageFormat.a4,
-              margin: pw.EdgeInsets.zero,
-              build: (pw.Context context) {
-                return pw.FullPage(
-                  ignoreMargins: true,
-                  child: pw.Image(
-                    pw.MemoryImage(pageBytes),
-                    fit: pw.BoxFit.fill,
-                  ),
-                );
-              },
-            ),
-          );
+          for (final pageBytes in [page1Bytes, page2Bytes, page3Bytes, page4Bytes, page5Bytes]) {
+            pdf.addPage(
+              pw.Page(
+                pageFormat: PdfPageFormat.a4,
+                margin: pw.EdgeInsets.zero,
+                build: (pw.Context context) {
+                  return pw.FullPage(
+                    ignoreMargins: true,
+                    child: pw.Image(
+                      pw.MemoryImage(pageBytes),
+                      fit: pw.BoxFit.fill,
+                    ),
+                  );
+                },
+              ),
+            );
+          }
+          return await pdf.save();
         }
-        return await pdf.save();
+      } catch (e) {
+        debugPrint('High-DPI widget PDF render fallback to vector PDF: $e');
       }
-    } catch (e) {
-      debugPrint('High-DPI widget PDF render fallback to vector PDF: $e');
     }
-  }
 
   // 2. Vector PDF fallback
   return _generateVectorKundaliPdfBytes(kundali: kundali, isGujarati: isGujarati);
@@ -379,7 +385,7 @@ class KundaliPdfService {
                 borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
               ),
               child: pw.Text(
-                'Page $pageNum of 3',
+                'Page $pageNum of 5',
                 style: pw.TextStyle(font: pw.Font.helveticaBold(), fontSize: 8, color: maroonColor),
               ),
             ),
@@ -1129,7 +1135,142 @@ class KundaliPdfService {
 
               pw.SizedBox(height: 5),
 
-              // 4. 120-Year Vimshottari Mahadasha Table
+              pw.SizedBox(height: 6),
+
+              // 4. Sacred Vedic Remedies & Mantras (ઇષ્ટદેવ & કલ્યાણ મંત્ર)
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(6),
+                decoration: pw.BoxDecoration(
+                  color: const PdfColor.fromInt(0xFFFAF0E6),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                  border: pw.Border.all(color: maroonColor, width: 1.1),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      isGujarati ? 'ઇષ્ટદેવ અને વૈદિક કલ્યાણ મંત્ર (Spiritual Guidance & Mantras)' : 'इष्टदेव एवं वैदिक कल्याण मंत्र (Spiritual Guidance & Mantras)',
+                      style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: maroonColor),
+                    ),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      isGujarati
+                          ? 'ઇષ્ટદેવ ઉપાસના: ${pred.ishtaDevataGu.isNotEmpty ? pred.ishtaDevataGu : 'ભગવાન કાળભૈરવ / શ્રી શનિદેવ / મહાદેવ'}'
+                          : 'इष्टदेव उपासना: ${pred.ishtaDevataHi.isNotEmpty ? pred.ishtaDevataHi : 'भगवान कालभैरव / श्री शनिदेव / महादेव'}',
+                      style: pw.TextStyle(font: fontBold, fontSize: 7.5, color: darkBg),
+                    ),
+                    pw.SizedBox(height: 1.5),
+                    pw.Text(
+                      isGujarati
+                          ? 'કલ્યાણ મહામંત્ર: ${pred.sacredMantraGu.isNotEmpty ? pred.sacredMantraGu : 'ૐ શં શનૈશ્ચરાય નમઃ / ૐ નમઃ શિવાય'}'
+                          : 'कल्याण महामंत्र: ${pred.sacredMantraHi.isNotEmpty ? pred.sacredMantraHi : 'ॐ शं शनैश्चराय नमः / ॐ नमः शिवाय'}',
+                      style: pw.TextStyle(font: fontBold, fontSize: 7.8, color: maroonColor),
+                    ),
+                    pw.SizedBox(height: 1.5),
+                    pw.Text(
+                      isGujarati
+                          ? 'શુભ દિશા: ${pred.luckyDirection} | રત્ન: ${kundali.luckyGemstoneGu} (વિધિવત્ પૂજન કરી શુક્લ પક્ષમાં ધારણ કરવું)'
+                          : 'शुभ दिशा: ${pred.luckyDirection} | रत्न: ${kundali.luckyGemstoneHi} (विधिवत् पूजन उपरांत शुक्ल पक्ष में धारण करें)',
+                      style: pw.TextStyle(font: fontRegular, fontSize: 7, color: darkBg),
+                    ),
+                  ],
+                ),
+              ),
+
+              pw.Spacer(),
+              buildFooter(3),
+            ],
+          );
+        },
+      ),
+    );
+
+    // ================= PAGE 4: ગ્રહ સ્પષ્ટ સ્થિતિ અને પ્રત્યેક ૯ ગ્રહોનું વિસ્તૃત ભાવ ફળ =================
+    pdf.addPage(
+      pw.Page(
+        pageTheme: pageTheme,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              buildHeader(
+                4,
+                pageSubtitle: isGujarati
+                    ? 'નવગ્રહ સ્પષ્ટ સ્થિતિ સારણી અને પ્રત્યેક ગ્રહનું ભાવ અનુસાર વિસ્તૃત ફળાદેશ'
+                    : 'नवग्रह स्पष्ट स्थिति सारणी एवं प्रत्येक ग्रह का भाव अनुसार विस्तृत फलादेश',
+              ),
+              pw.SizedBox(height: 6),
+
+              ...kundali.planets.map((planet) {
+                final rashiName = _getRashiName(planet.rashiId, isGujarati);
+                final planetName = isGujarati ? planet.nameGu : planet.nameHi;
+                final dignity = KundaliCalculator.getPlanetDignity(planet);
+                final dignityLabel = isGujarati ? (dignity['labelGu'] as String) : (dignity['labelHi'] as String);
+                final grahaFalMap = KundaliCalculator.getGrahaFal(planet, kundali.lagnaRashiId);
+                final grahaFalText = isGujarati ? (grahaFalMap['gu'] ?? '') : (grahaFalMap['hi'] ?? '');
+                final retroStr = planet.isRetrograde ? (isGujarati ? ' (વક્રી)' : ' (वक्री)') : '';
+
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 4),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  decoration: pw.BoxDecoration(
+                    color: lightRow,
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                    border: pw.Border.all(color: borderCol, width: 0.7),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            '$planetName$retroStr  •  $rashiName (${planet.formattedDegree})  •  ${isGujarati ? '${planet.houseNumber} મો ભાવ' : '${planet.houseNumber} वां भाव'}',
+                            style: pw.TextStyle(font: fontBold, fontSize: 7.8, color: maroonColor),
+                          ),
+                          pw.Text(
+                            dignityLabel,
+                            style: pw.TextStyle(font: fontBold, fontSize: 7.2, color: PdfColors.amber900),
+                          ),
+                        ],
+                      ),
+                      pw.SizedBox(height: 1.5),
+                      pw.Text(
+                        grahaFalText,
+                        style: pw.TextStyle(font: fontRegular, fontSize: 7, color: darkBg),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
+              pw.Spacer(),
+              buildFooter(4),
+            ],
+          );
+        },
+      ),
+    );
+
+    // ================= PAGE 5: ૧૨૦ વર્ષ વિંશોત્તરી મહાદશા સંપૂર્ણ ચક્ર અને પ્રત્યેક દશાનું ફળ =================
+    pdf.addPage(
+      pw.Page(
+        pageTheme: pageTheme,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              buildHeader(
+                5,
+                pageSubtitle: isGujarati
+                    ? '૧૨૦ વર્ષ વિંશોત્તરી મહાદશા સંપૂર્ણ ચક્ર, વર્તમાન દશા & પ્રત્યેક દશાનું વિસ્તૃત ફળ'
+                    : '१२० वर्ष विंशोत्तरी महादशा संपूर्ण चक्र, वर्तमान दशा & प्रत्येक दशा का विस्तृत फल',
+              ),
+              pw.SizedBox(height: 6),
+
+              // 1. 120-Year Vimshottari Mahadasha Table
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -1190,50 +1331,64 @@ class KundaliPdfService {
               ),
 
               pw.SizedBox(height: 5),
-
-              // 5. Sacred Vedic Remedies & Mantras (ઇષ્ટદેવ & કલ્યાણ મંત્ર)
-              pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.all(6),
-                decoration: pw.BoxDecoration(
-                  color: const PdfColor.fromInt(0xFFFAF0E6),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
-                  border: pw.Border.all(color: maroonColor, width: 1.1),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      isGujarati ? 'ઇષ્ટદેવ અને વૈદિક કલ્યાણ મંત્ર (Spiritual Guidance & Mantras)' : 'इष्टदेव एवं वैदिक कल्याण मंत्र (Spiritual Guidance & Mantras)',
-                      style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: maroonColor),
-                    ),
-                    pw.SizedBox(height: 2),
-                    pw.Text(
-                      isGujarati
-                          ? 'ઇષ્ટદેવ ઉપાસના: ${pred.ishtaDevataGu.isNotEmpty ? pred.ishtaDevataGu : 'ભગવાન કાળભૈરવ / શ્રી શનિદેવ / મહાદેવ'}'
-                          : 'इष्टदेव उपासना: ${pred.ishtaDevataHi.isNotEmpty ? pred.ishtaDevataHi : 'भगवान कालभैरव / श्री शनिदेव / महादेव'}',
-                      style: pw.TextStyle(font: fontBold, fontSize: 7.5, color: darkBg),
-                    ),
-                    pw.SizedBox(height: 1.5),
-                    pw.Text(
-                      isGujarati
-                          ? 'કલ્યાણ મહામંત્ર: ${pred.sacredMantraGu.isNotEmpty ? pred.sacredMantraGu : 'ૐ શં શનૈશ્ચરાય નમઃ / ૐ નમઃ શિવાય'}'
-                          : 'कल्याण महामंत्र: ${pred.sacredMantraHi.isNotEmpty ? pred.sacredMantraHi : 'ॐ शं शनैश्चराय नमः / ॐ नमः शिवाय'}',
-                      style: pw.TextStyle(font: fontBold, fontSize: 7.8, color: maroonColor),
-                    ),
-                    pw.SizedBox(height: 1.5),
-                    pw.Text(
-                      isGujarati
-                          ? 'શુભ દિશા: ${pred.luckyDirection} | રત્ન: ${kundali.luckyGemstoneGu} (વિધિવત્ પૂજન કરી શુક્લ પક્ષમાં ધારણ કરવું)'
-                          : 'शुभ दिशा: ${pred.luckyDirection} | रत्न: ${kundali.luckyGemstoneHi} (विधिवत् पूजन उपरांत शुक्ल पक्ष में धारण करें)',
-                      style: pw.TextStyle(font: fontRegular, fontSize: 7, color: darkBg),
-                    ),
-                  ],
-                ),
+              pw.Text(
+                isGujarati ? 'પ્રત્યેક મહાદશાનું વિસ્તૃત જીવન ફળાદેશ (Mahadasha Interpretations):' : 'प्रत्येक महादशा का विस्तृत जीवन फलादेश (Mahadasha Interpretations):',
+                style: pw.TextStyle(font: fontBold, fontSize: 8, color: maroonColor),
               ),
+              pw.SizedBox(height: 2),
+
+              ...kundali.dashas.map((dasha) {
+                final dashaName = isGujarati ? dasha.planetNameGu : dasha.planetNameHi;
+                final startStr = DateFormat('dd/MM/yyyy').format(dasha.startDate);
+                final endStr = DateFormat('dd/MM/yyyy').format(dasha.endDate);
+                final dashaFal = KundaliCalculator.getAntardashaFal(dasha.planetNameGu, dasha.planetNameGu);
+                final dashaFalText = isGujarati ? dashaFal['gu']! : dashaFal['hi']!;
+
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 3),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                  decoration: pw.BoxDecoration(
+                    color: dasha.isCurrent ? PdfColors.amber100 : lightRow,
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                    border: pw.Border.all(
+                      color: dasha.isCurrent ? maroonColor : borderCol,
+                      width: dasha.isCurrent ? 0.9 : 0.5,
+                    ),
+                  ),
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Container(
+                        width: 80,
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text(
+                              '$dashaName (${dasha.durationYears} ${isGujarati ? 'વર્ષ' : 'वर्ष'})',
+                              style: pw.TextStyle(font: fontBold, fontSize: 7.2, color: dasha.isCurrent ? maroonColor : darkBg),
+                            ),
+                            pw.Text(
+                              '$startStr - $endStr',
+                              style: pw.TextStyle(font: fontRegular, fontSize: 6.5, color: PdfColors.grey700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      pw.SizedBox(width: 5),
+                      pw.Expanded(
+                        child: pw.Text(
+                          dashaFalText,
+                          style: pw.TextStyle(font: fontRegular, fontSize: 6.8, color: darkBg),
+                          maxLines: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
 
               pw.Spacer(),
-              buildFooter(3),
+              buildFooter(5),
             ],
           );
         },

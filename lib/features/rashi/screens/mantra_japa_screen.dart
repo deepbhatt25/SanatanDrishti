@@ -253,8 +253,8 @@ class _MantraJapaScreenState extends State<MantraJapaScreen> with TickerProvider
   }
 
   void _onChantTapped() {
-    // Ultra smooth low-level tactile vibration
-    HapticFeedback.selectionClick();
+    // Distinct, physical tactile vibration on every bead touch
+    HapticFeedback.lightImpact();
     _pulseController.forward(from: 0.96);
 
     setState(() {

@@ -50,11 +50,11 @@ class KundaliPdfA4Pages {
           _buildHeader(
             pageNumber: 1,
             subtitle: isGujarati
-                ? 'જાતક પરિચય, જન્મ લગ્ન, નવાંશ, ચંદ્ર કુંડળી અને ગ્રહ સ્પષ્ટ સ્થિતિ'
-                : 'जातक विवरण, जन्म लग्न, नवमांश, चन्द्र कुंडली एवं ग्रह स्पष्ट स्थिति',
+                ? 'જાતક પરિચય, જન્મ લગ્ન (D1), નવાંશ (D9), ચંદ્ર કુંડળી & અવકહડા ચક્ર'
+                : 'जातक विवरण, जन्म लग्न (D1), नवमांश (D9), चन्द्र कुंडली & अवकहड़ा चक्र',
             isGujarati: isGujarati,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
 
           // 1. Birth Details & Avakahada Chakra (2 side-by-side cards)
           Row(
@@ -101,24 +101,31 @@ class KundaliPdfA4Pages {
                       const SizedBox(height: 2),
                       _buildInfoRow(
                         isGujarati ? 'જન્મ તારીખ (DOB):' : 'जन्म तिथि (DOB):',
-                        DateFormat('dd MMMM yyyy').format(kundali.profile.dateOfBirth),
+                        DateFormat('dd MMMM yyyy (EEEE)').format(kundali.profile.dateOfBirth),
                         isGujarati,
                       ),
                       const SizedBox(height: 2),
                       _buildInfoRow(isGujarati ? 'જન્મ સમય (Time):' : 'जन्म समय (Time):', kundali.profile.formattedTime, isGujarati),
                       const SizedBox(height: 2),
-                      _buildInfoRow(isGujarati ? 'જન્મ સ્થળ (Place):' : 'जन्म स्थान (Place):', kundali.profile.cityName, isGujarati),
-                      const SizedBox(height: 2),
                       _buildInfoRow(
-                        isGujarati ? 'અક્ષાંશ/રેખાંશ:' : 'अक्षांश/रेखांश:',
-                        '${kundali.profile.latitude.toStringAsFixed(2)}°N, ${kundali.profile.longitude.toStringAsFixed(2)}°E',
+                        isGujarati ? 'જન્મ સ્થળ (City):' : 'जन्म स्थान (City):',
+                        '${kundali.profile.cityName} (Lat: ${kundali.profile.latitude.toStringAsFixed(2)}°, Lon: ${kundali.profile.longitude.toStringAsFixed(2)}°)',
                         isGujarati,
                       ),
                       const SizedBox(height: 2),
                       _buildInfoRow(
                         isGujarati ? 'અયનાંશ (Ayanamsha):' : 'अयनांश (Ayanamsha):',
-                        'Lahiri 23°51\'22" (Nirayana)',
+                        'Lahiri (ચિત્રપક્ષ) 24° 08\' 42"',
                         isGujarati,
+                      ),
+                      const SizedBox(height: 2),
+                      _buildInfoRow(
+                        isGujarati ? 'માંગલિક સ્થિતિ:' : 'मांगलिक स्थिति:',
+                        kundali.mangalDosha.hasDosha
+                            ? (isGujarati ? 'માંગલિક દોષ પ્રભાવ' : 'मांगलिक दोष प्रभावी')
+                            : (isGujarati ? 'દોષ મુક્ત / નિર્દોષ (પરિહાર યોગ)' : 'दोष मुक्त / निर्दोष (परिहार योग)'),
+                        isGujarati,
+                        isHighlight: true,
                       ),
                     ],
                   ),
@@ -143,7 +150,7 @@ class KundaliPdfA4Pages {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            isGujarati ? 'અવકહડા ચક્ર (Avakahada Chakra)' : 'अवकहड़ा चक्र (Avakahada Chakra)',
+                            isGujarati ? 'અવકહડા ચક્ર (Vedic Astrological Profile)' : 'अवकहड़ा चक्र (Vedic Astrological Profile)',
                             style: _fontBold(isGujarati, 9.5, maroonColor),
                           ),
                           Container(
@@ -207,11 +214,11 @@ class KundaliPdfA4Pages {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
 
           // 2. 3 North Indian Vedic Charts Side-by-Side
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
             decoration: BoxDecoration(
               color: lightCard,
               borderRadius: BorderRadius.circular(6),
@@ -224,43 +231,43 @@ class KundaliPdfA4Pages {
                   children: [
                     _buildChartBox(
                       title: isGujarati ? '૧. લગ્ન કુંડળી (Lagna D1)' : '१. जन्म लग्न कुंडली (Lagna D1)',
-                      chartWidget: KundaliChartPainter(
+                      chartWidget: KundaliChartWidget(
                         kundali: kundali,
                         isGujarati: isGujarati,
                         isNavamsha: false,
                         isChandra: false,
-                        isDark: false,
+                        size: 160,
                       ),
                       isGujarati: isGujarati,
                     ),
                     _buildChartBox(
                       title: isGujarati ? '૨. નવાંશ કુંડળી (Navamsha D9)' : '२. नवमांश कुंडली (Navamsha D9)',
-                      chartWidget: KundaliChartPainter(
+                      chartWidget: KundaliChartWidget(
                         kundali: kundali,
                         isGujarati: isGujarati,
                         isNavamsha: true,
                         isChandra: false,
-                        isDark: false,
+                        size: 160,
                       ),
                       isGujarati: isGujarati,
                     ),
                     _buildChartBox(
                       title: isGujarati ? '૩. ચંદ્ર કુંડળી (Chandra)' : '३. चन्द्र कुंडली (Chandra)',
-                      chartWidget: KundaliChartPainter(
+                      chartWidget: KundaliChartWidget(
                         kundali: kundali,
                         isGujarati: isGujarati,
                         isNavamsha: false,
                         isChandra: true,
-                        isDark: false,
+                        size: 160,
                       ),
                       isGujarati: isGujarati,
                     ),
                   ],
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 // Planet abbreviations legend
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                   decoration: BoxDecoration(
                     color: lightRow,
                     borderRadius: BorderRadius.circular(4),
@@ -277,11 +284,11 @@ class KundaliPdfA4Pages {
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
 
           // 3. Graha Spashta Table (10 Rows)
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               color: lightCard,
               borderRadius: BorderRadius.circular(6),
@@ -298,12 +305,12 @@ class KundaliPdfA4Pages {
                       style: _fontBold(isGujarati, 9.5, maroonColor),
                     ),
                     Text(
-                      isGujarati ? 'નિરાયણ પદ્ધતિ (Lahiri Ayanamsha)' : 'निरयण पद्धति (Lahiri Ayanamsha)',
+                      isGujarati ? 'લગ્ન અંશ: ${kundali.lagnaDegree.toStringAsFixed(2)}°' : 'लग्न अंश: ${kundali.lagnaDegree.toStringAsFixed(2)}°',
                       style: _fontRegular(isGujarati, 8.0, maroonColor.withAlpha(200)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 _buildGrahaSpashtaTable(kundali, isGujarati),
               ],
             ),
@@ -475,13 +482,18 @@ class KundaliPdfA4Pages {
   }
 
   // =========================================================================
-  // PAGE 3: Special Yogas, Manglik Dosha, Kaal Sarp, Mahadasha, Mantras
+  // PAGE 3: Special Yogas, Manglik Dosha, Kaal Sarp, Sadhesati, Mantras
   // =========================================================================
   static Widget buildPage3({
     required KundaliResult kundali,
     required bool isGujarati,
   }) {
     final pred = kundali.lifePrediction;
+    final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+      planets: kundali.planets,
+      moonRashiId: kundali.moonRashiId,
+      lagnaRashiId: kundali.lagnaRashiId,
+    );
 
     return _buildA4Container(
       child: Column(
@@ -490,8 +502,8 @@ class KundaliPdfA4Pages {
           _buildHeader(
             pageNumber: 3,
             subtitle: isGujarati
-                ? 'રાજયોગ, માંગલિક દોષ, કાળસર્પ, સાડાસાતી, ૧૨૦ વર્ષ વિંશોત્તરી મહાદશા & મંત્ર'
-                : 'राजयोग, मांगलिक दोष, कालसर्प, साढ़ेसाती, १२० वर्ष विंशोत्तरी महादशा & मंत्र',
+                ? 'રાજયોગ, માંગલિક દોષફળ, વિશેષ કાળસર્પ દોષ, શનિ સાડાસાતી & ઈષ્ટદેવ ઉપાસના'
+                : 'राजयोग, मांगलिक दोषफल, विशेष कालसर्प दोष, शनि साढ़ेसाती & इष्टदेव उपासना',
             isGujarati: isGujarati,
           ),
           const SizedBox(height: 7),
@@ -518,10 +530,10 @@ class KundaliPdfA4Pages {
                   isGujarati
                       ? '• બુધાદિત્ય રાજયોગ: સૂર્ય અને બુધની શુભ યુતિથી તીવ્ર બુદ્ધિપ્રતિભા, વહીવટી કુશળતા, ઉત્તમ વાણી અને સમાજમાં પ્રતિષ્ઠા પ્રાપ્ત થાય છે.\n'
                           '• ગજકેસરી યોગ: ગુરુ અને ચંદ્રના કેન્દ્ર સંબંધથી દીર્ઘકાલીન સમૃદ્ધિ, ધાર્મિક બુદ્ધિ, જનપ્રિયતા અને પરિવાર સુખ પ્રાપ્ત થાય છે.\n'
-                          '• લક્ષ્મી યોગ & અમલા યોગ: ભાગ્ય સ્થાન અને કેન્દ્ર સ્થાનના અધિપતિઓની અનુકૂળ દ્રષ્ટિથી ધનલાભ અને અવિરત સુખસંપત્તિ મળે છે.'
+                          '• શુભ કર્તરી & લક્ષ્મી યોગ: કેન્દ્ર તથા ત્રિકોણ ભાવના સ્વામીઓની શુભ અનુકૂળતાથી અવિરત સુખસંપત્તિ, દૈવી રક્ષા અને સ્થિર સમૃદ્ધિ મળે છે.'
                       : '• बुधादित्य राजयोग: सूर्य एवं बुध की युति से तीव्र बुद्धिमत्ता, प्रशासनिक क्षमता, वाकपटुता एवं यश प्राप्त होता है।\n'
                           '• गजकेसरी योग: गुरु व चन्द्र के केंद्र संबंध से दीर्घकालिक समृद्धि, धार्मिक बुद्धि, लोकप्रियता एवं परिवार सुख मिलता है।\n'
-                          '• लक्ष्मी योग & अमला योग: भाग्य व केन्द्र भाव स्वामियों की शुभ दृष्टि से अखंड धनलाभ व वैभव प्राप्त होता है।',
+                          '• शुभ कर्तरी & लक्ष्मी योग: केन्द्र तथा त्रिकोण भावों की शुभ अनुकूलता से अखंड धनलाभ, ईश्वरीय कृपा व सतत सुरक्षा मिलती है।',
                   style: _fontRegular(isGujarati, 7.6, darkBg, height: 1.35),
                 ),
               ],
@@ -529,7 +541,7 @@ class KundaliPdfA4Pages {
           ),
           const SizedBox(height: 5),
 
-          // 2. Manglik Dosha Analysis
+          // 2. Manglik Dosha Analysis & Doshfal
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
@@ -560,7 +572,7 @@ class KundaliPdfA4Pages {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${isGujarati ? 'શાંતિ ઉપાય:' : 'शांति उपाय:'} ${isGujarati ? kundali.mangalDosha.remedyGu : kundali.mangalDosha.remedyHi}',
+                  '${isGujarati ? 'શાંતિ ઉપાય / નિવારણ:' : 'शांति उपाय / निवारण:'} ${isGujarati ? kundali.mangalDosha.remedyGu : kundali.mangalDosha.remedyHi}',
                   style: _fontBold(isGujarati, 7.6, const Color(0xFF9C2A10), height: 1.3),
                 ),
               ],
@@ -569,50 +581,6 @@ class KundaliPdfA4Pages {
           const SizedBox(height: 5),
 
           // 3. Kaal Sarp & Shani Sade Sati Analysis
-          Builder(
-            builder: (context) {
-              final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
-                planets: kundali.planets,
-                moonRashiId: kundali.moonRashiId,
-                lagnaRashiId: kundali.lagnaRashiId,
-              );
-              return Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: lightCard,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: borderCol, width: 0.9),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isGujarati ? 'વિશેષ કાળસર્પ & સાડાસાતી વિશ્લેષણ (Kaal Sarp & Shani Analysis)' : 'विशेष कालसर्प & साढ़ेसाती विश्लेषण (Kaal Sarp & Shani Analysis)',
-                      style: _fontBold(isGujarati, 9.5, maroonColor),
-                    ),
-                    const SizedBox(height: 3),
-                    const Divider(color: borderCol, thickness: 0.5, height: 4),
-                    const SizedBox(height: 3),
-                    Text(
-                      isGujarati
-                          ? '• કાળસર્પ સ્થિતિ: [${doshaAnalysis.kaalSarpNameGu}] ${doshaAnalysis.kaalSarpDescGu}\n'
-                              '• શનિ સાડાસાતી: [${doshaAnalysis.shaniStatusGu}] ${doshaAnalysis.shaniDescGu}\n'
-                              '• ${doshaAnalysis.vedicMantraGu}\n'
-                              '• ${doshaAnalysis.rudrakshaGu.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneGu.replaceAll('• ', '')}'
-                          : '• कालसर्प स्थिति: [${doshaAnalysis.kaalSarpNameHi}] ${doshaAnalysis.kaalSarpDescHi}\n'
-                              '• शनि साढ़ेसाती: [${doshaAnalysis.shaniStatusHi}] ${doshaAnalysis.shaniDescHi}\n'
-                              '• ${doshaAnalysis.vedicMantraHi}\n'
-                              '• ${doshaAnalysis.rudrakshaHi.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneHi.replaceAll('• ', '')}',
-                      style: _fontRegular(isGujarati, 7.6, darkBg, height: 1.35),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 5),
-
-          // 4. 120-Year Vimshottari Mahadasha Table
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
@@ -623,27 +591,31 @@ class KundaliPdfA4Pages {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      isGujarati ? '૧૨૦ વર્ષ વિંશોત્તરી મહાદશા ચક્ર (Vimshottari Mahadasha 120 Years)' : '१२० वर्ष विंशोत्तरी महादशा चक्र (Vimshottari Mahadasha 120 Years)',
-                      style: _fontBold(isGujarati, 9.5, maroonColor),
-                    ),
-                    Text(
-                      isGujarati ? 'કુલ અવધિ: ૧૨૦ વર્ષ' : 'कुल अवधि: १२० वर्ष',
-                      style: _fontRegular(isGujarati, 8.0, maroonColor.withAlpha(200)),
-                    ),
-                  ],
+                Text(
+                  isGujarati ? 'વિશેષ કાળસર્પ & સાડાસાતી વિશ્લેષણ (Kaal Sarp & Shani Analysis)' : 'विशेष कालसर्प & साढ़ेसाती विश्लेषण (Kaal Sarp & Shani Analysis)',
+                  style: _fontBold(isGujarati, 9.5, maroonColor),
                 ),
-                const SizedBox(height: 4),
-                _buildDashaTable(kundali, isGujarati),
+                const SizedBox(height: 3),
+                const Divider(color: borderCol, thickness: 0.5, height: 4),
+                const SizedBox(height: 3),
+                Text(
+                  isGujarati
+                      ? '• કાળસર્પ સ્થિતિ: [${doshaAnalysis.kaalSarpNameGu}] ${doshaAnalysis.kaalSarpDescGu}\n'
+                          '• શનિ સાડાસાતી: [${doshaAnalysis.shaniStatusGu}] ${doshaAnalysis.shaniDescGu}\n'
+                          '• ${doshaAnalysis.vedicMantraGu}\n'
+                          '• રુદ્રાક્ષ & રત્ન ઉપાય: ${doshaAnalysis.rudrakshaGu.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneGu.replaceAll('• ', '')}'
+                      : '• कालसर्प स्थिति: [${doshaAnalysis.kaalSarpNameHi}] ${doshaAnalysis.kaalSarpDescHi}\n'
+                          '• शनि साढ़ेसाती: [${doshaAnalysis.shaniStatusHi}] ${doshaAnalysis.shaniDescHi}\n'
+                          '• ${doshaAnalysis.vedicMantraHi}\n'
+                          '• रुद्राक्ष & रत्न उपाय: ${doshaAnalysis.rudrakshaHi.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneHi.replaceAll('• ', '')}',
+                  style: _fontRegular(isGujarati, 7.6, darkBg, height: 1.35),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 5),
 
-          // 5. Spiritual Guidance & Sacred Mantras
+          // 4. Spiritual Guidance & Sacred Mantras
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
@@ -678,6 +650,238 @@ class KundaliPdfA4Pages {
               ],
             ),
           ),
+
+          const Spacer(),
+          _buildFooter(isGujarati),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // PAGE 4: Planetary Positions & Detailed Vedic Graha Phal (All 9 Planets)
+  // =========================================================================
+  static Widget buildPage4({
+    required KundaliResult kundali,
+    required bool isGujarati,
+  }) {
+    return _buildA4Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(
+            pageNumber: 4,
+            subtitle: isGujarati
+                ? 'નવગ્રહ સ્પષ્ટ સ્થિતિ સારણી અને પ્રત્યેક ગ્રહનું ભાવ અનુસાર વિસ્તૃત ફળાદેશ'
+                : 'नवग्रह स्पष्ट स्थिति सारणी एवं प्रत्येक ग्रह का भाव अनुसार विस्तृत फलादेश',
+            isGujarati: isGujarati,
+          ),
+          const SizedBox(height: 6),
+
+          // Detailed Vedic Graha Phal for all 9 Planets in list
+          ...kundali.planets.map((planet) {
+            final rashiName = _getRashiName(planet.rashiId, isGujarati);
+            final planetName = isGujarati ? planet.nameGu : planet.nameHi;
+            final dignity = KundaliCalculator.getPlanetDignity(planet);
+            final dignityLabel = isGujarati ? (dignity['labelGu'] as String) : (dignity['labelHi'] as String);
+            final grahaFalMap = KundaliCalculator.getGrahaFal(planet, kundali.lagnaRashiId);
+            final grahaFalText = isGujarati ? (grahaFalMap['gu'] ?? '') : (grahaFalMap['hi'] ?? '');
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: lightCard,
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: borderCol, width: 0.8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: maroonColor,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(
+                              isGujarati ? planet.shortGu : planet.shortHi,
+                              style: _fontBold(isGujarati, 7.5, goldColor),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$planetName  •  $rashiName (${planet.formattedDegree})  •  ${isGujarati ? '${planet.houseNumber} મો ભાવ' : '${planet.houseNumber} वां भाव'}',
+                            style: _fontBold(isGujarati, 8.2, maroonColor),
+                          ),
+                          if (planet.isRetrograde) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              isGujarati ? '(વક્રી)' : '(वक्री)',
+                              style: _fontBold(isGujarati, 7.5, const Color(0xFFD35400)),
+                            ),
+                          ],
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: maroonColor.withAlpha(15),
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(color: borderCol, width: 0.5),
+                        ),
+                        child: Text(
+                          dignityLabel,
+                          style: _fontBold(isGujarati, 7.2, maroonColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    grahaFalText,
+                    style: _fontRegular(isGujarati, 7.2, darkBg, height: 1.28),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            );
+          }),
+
+          const Spacer(),
+          _buildFooter(isGujarati),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // PAGE 5: 120-Year Vimshottari Mahadasha Timeline & Detailed Dasha Phal
+  // =========================================================================
+  static Widget buildPage5({
+    required KundaliResult kundali,
+    required bool isGujarati,
+  }) {
+    return _buildA4Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(
+            pageNumber: 5,
+            subtitle: isGujarati
+                ? '૧૨૦ વર્ષ વિંશોત્તરી મહાદશા સંપૂર્ણ ચક્ર, વર્તમાન દશા & પ્રત્યેક દશાનું વિસ્તૃત ફળ'
+                : '१२० वर्ष विंशोत्तरी महादशा संपूर्ण चक्र, वर्तमान दशा & प्रत्येक दशा का विस्तृत फल',
+            isGujarati: isGujarati,
+          ),
+          const SizedBox(height: 6),
+
+          // 1. Vimshottari Mahadasha Timeline Table (All 9 Mahadashas)
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: lightCard,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: borderCol, width: 0.9),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isGujarati ? '૧૨૦ વર્ષ વિંશોત્તરી મહાદશા સંપૂર્ણ ચક્ર (Vimshottari Mahadasha 120 Years)' : '१२० वर्ष विंशोत्तरी महादशा संपूर्ण चक्र (Vimshottari Mahadasha 120 Years)',
+                      style: _fontBold(isGujarati, 9.2, maroonColor),
+                    ),
+                    Text(
+                      isGujarati ? 'કુલ અવધિ: ૧૨૦ વર્ષ' : 'कुल अवधि: १२० वर्ष',
+                      style: _fontRegular(isGujarati, 7.8, maroonColor.withAlpha(200)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                _buildDashaTable(kundali, isGujarati),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          // 2. Detailed Predictive Mahadasha Phal for All 9 Mahadashas
+          Text(
+            isGujarati ? 'પ્રત્યેક મહાદશાનું વિસ્તૃત જીવન ફળાદેશ (Mahadasha Interpretations):' : 'प्रत्येक महादशा का विस्तृत जीवन फलादेश (Mahadasha Interpretations):',
+            style: _fontBold(isGujarati, 8.8, maroonColor),
+          ),
+          const SizedBox(height: 4),
+
+          ...kundali.dashas.map((dasha) {
+            final dashaName = isGujarati ? dasha.planetNameGu : dasha.planetNameHi;
+            final startStr = DateFormat('dd/MM/yyyy').format(dasha.startDate);
+            final endStr = DateFormat('dd/MM/yyyy').format(dasha.endDate);
+            final dashaFal = KundaliCalculator.getAntardashaFal(dasha.planetNameGu, dasha.planetNameGu);
+            final dashaFalText = isGujarati ? dashaFal['gu']! : dashaFal['hi']!;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: dasha.isCurrent ? const Color(0xFFFFF3CD) : lightRow,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: dasha.isCurrent ? maroonColor : borderCol,
+                  width: dasha.isCurrent ? 1.0 : 0.6,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 85,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$dashaName (${dasha.durationYears} ${isGujarati ? 'વર્ષ' : 'वर्ष'})',
+                          style: _fontBold(isGujarati, 7.8, dasha.isCurrent ? maroonColor : darkBg),
+                        ),
+                        Text(
+                          '$startStr - $endStr',
+                          style: _fontRegular(isGujarati, 6.8, Colors.grey.shade700),
+                        ),
+                        if (dasha.isCurrent)
+                          Container(
+                            margin: const EdgeInsets.only(top: 1.5),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: maroonColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                            child: Text(
+                              isGujarati ? 'ચાલુ છે' : 'सक्रिय',
+                              style: _fontBold(isGujarati, 6.5, Colors.white),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      dashaFalText,
+                      style: _fontRegular(isGujarati, 7.2, darkBg, height: 1.25),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
 
           const Spacer(),
           _buildFooter(isGujarati),
@@ -777,7 +981,7 @@ class KundaliPdfA4Pages {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              'Page $pageNumber of 3',
+              'Page $pageNumber of 5',
               style: _fontOutfit(
                 fontSize: 8.5,
                 fontWeight: FontWeight.bold,
@@ -799,38 +1003,18 @@ class KundaliPdfA4Pages {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                ClipOval(
-                  child: Image.asset(
-                    'assets/images/sanatandrishti_logo.png',
-                    width: 14,
-                    height: 14,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.stars, color: maroonColor, size: 12),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    isGujarati
-                        ? 'SanatanDrishti App • પંચાંગ, ગીતા, કુંડળી & રાશિફળ'
-                        : 'SanatanDrishti App • पञ्चाङ्ग, गीता, कुंडली एवं राशिफल',
-                    style: _fontBold(isGujarati, 7.2, maroonColor),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
           Text(
-            'Google Play & App Store | www.sanatandrishti.app',
+            isGujarati
+                ? 'સનાતન દૃષ્ટિ વૈદિક જ્યોતિષ સંસ્થા  •  સર્વે ભવન્તુ સુખિનઃ'
+                : 'सनातन दृष्टि वैदिक ज्योतिष संस्थान  •  सर्वे भवन्तु सुखिनः',
+            style: _fontRegular(isGujarati, 7.2, maroonColor),
+          ),
+          Text(
+            'SanatanDrishti App',
             style: _fontOutfit(
               fontSize: 7.2,
-              color: darkBg.withAlpha(180),
+              fontWeight: FontWeight.bold,
+              color: maroonColor,
             ),
           ),
         ],
@@ -838,21 +1022,14 @@ class KundaliPdfA4Pages {
     );
   }
 
-  static Widget _buildInfoRow(
-    String label,
-    String value,
-    bool isGujarati, {
-    bool isBoldValue = false,
-    bool isHighlight = false,
-  }) {
+  static Widget _buildInfoRow(String label, String value, bool isGujarati, {bool isHighlight = false, bool isBoldValue = false}) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 95,
+          width: 85,
           child: Text(
             label,
-            style: _fontBold(isGujarati, 7.8, darkBg),
+            style: _fontRegular(isGujarati, 7.6, darkBg.withAlpha(210)),
           ),
         ),
         Expanded(
@@ -860,7 +1037,7 @@ class KundaliPdfA4Pages {
             value,
             style: isHighlight
                 ? _fontBold(isGujarati, 7.8, maroonColor)
-                : (isBoldValue ? _fontBold(isGujarati, 7.8, darkBg) : _fontRegular(isGujarati, 7.8, darkBg)),
+                : (isBoldValue ? _fontBold(isGujarati, 7.6, darkBg) : _fontRegular(isGujarati, 7.6, darkBg)),
           ),
         ),
       ],
@@ -869,193 +1046,105 @@ class KundaliPdfA4Pages {
 
   static Widget _buildChartBox({
     required String title,
-    required CustomPainter chartWidget,
+    required Widget chartWidget,
     required bool isGujarati,
   }) {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           decoration: BoxDecoration(
             color: maroonColor,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(3),
           ),
           child: Text(
             title,
-            style: _fontBold(isGujarati, 7.5, Colors.white),
+            style: _fontBold(isGujarati, 7.2, goldColor),
           ),
         ),
         const SizedBox(height: 3),
         Container(
-          width: 155,
-          height: 145,
+          width: 172,
+          height: 172,
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF8EE),
-            border: Border.all(color: maroonColor, width: 1.0),
+            color: Colors.white,
+            border: Border.all(color: goldColor, width: 1.2),
+            borderRadius: BorderRadius.circular(4),
           ),
-          child: CustomPaint(
-            painter: chartWidget,
-          ),
+          child: chartWidget,
         ),
       ],
     );
   }
 
   static Widget _buildGrahaSpashtaTable(KundaliResult kundali, bool isGujarati) {
-    final ascendantName = isGujarati ? 'લગ્ન (Asc)' : 'लग्न (Asc)';
-    final ascendantRashiName = _getRashiName(kundali.lagnaRashiId, isGujarati);
-    final ascendantLord = _getRashiLord(kundali.lagnaRashiId, isGujarati);
-    final ascendantNak = isGujarati ? kundali.nakshatraGu : kundali.nakshatraHi;
-
     return Table(
       border: TableBorder.all(color: borderCol, width: 0.5),
       columnWidths: const {
-        0: FlexColumnWidth(1.2),
+        0: FlexColumnWidth(1.4),
         1: FlexColumnWidth(1.2),
-        2: FlexColumnWidth(0.9),
-        3: FlexColumnWidth(0.7),
-        4: FlexColumnWidth(1.5),
-        5: FlexColumnWidth(0.7),
-        6: FlexColumnWidth(1.3),
-        7: FlexColumnWidth(1.0),
+        2: FlexColumnWidth(1.0),
+        3: FlexColumnWidth(1.0),
+        4: FlexColumnWidth(1.2),
       },
       children: [
-        // Header Row
+        // Header
         TableRow(
           decoration: const BoxDecoration(color: maroonColor),
           children: [
             _buildTableHeaderCell(isGujarati ? 'ગ્રહ' : 'ग्रह', isGujarati),
             _buildTableHeaderCell(isGujarati ? 'રાશિ' : 'राशि', isGujarati),
-            _buildTableHeaderCell(isGujarati ? 'અંશ' : 'अंश', isGujarati),
             _buildTableHeaderCell(isGujarati ? 'ભાવ' : 'भाव', isGujarati),
-            _buildTableHeaderCell(isGujarati ? 'નક્ષત્ર' : 'नक्षत्र', isGujarati),
-            _buildTableHeaderCell(isGujarati ? 'પાદ' : 'पाद', isGujarati),
-            _buildTableHeaderCell(isGujarati ? 'રાશિ સ્વામી' : 'राशि स्वामी', isGujarati),
-            _buildTableHeaderCell(isGujarati ? 'ગતિ' : 'गति', isGujarati),
+            _buildTableHeaderCell(isGujarati ? 'અંશ' : 'अंश', isGujarati),
+            _buildTableHeaderCell(isGujarati ? 'સ્થિતિ' : 'स्थिति', isGujarati),
           ],
         ),
-        // Ascendant Row
-        _buildTableRow(
-          planetName: ascendantName,
-          rashi: '$ascendantRashiName (${kundali.lagnaRashiId})',
-          degree: '${kundali.lagnaDegree.toStringAsFixed(1)}°',
-          house: '1',
-          nakshatra: ascendantNak,
-          pada: '${kundali.charan}',
-          lord: ascendantLord,
-          motion: isGujarati ? 'ઉદય' : 'उदय',
-          isEven: false,
-          isRetro: false,
-          isGujarati: isGujarati,
-          isAscendant: true,
+        // Lagna Row
+        TableRow(
+          decoration: const BoxDecoration(color: Color(0xFFFFF3CD)),
+          children: [
+            _buildTableCell(isGujarati ? 'લગ્ન (Lagna)' : 'लग्न (Lagna)', isGujarati, isBold: true, color: maroonColor),
+            _buildTableCell(_getRashiName(kundali.lagnaRashiId, isGujarati), isGujarati, align: TextAlign.center, isBold: true),
+            _buildTableCell(isGujarati ? '૧ લો ભાવ' : '१ ला भाव', isGujarati, align: TextAlign.center),
+            _buildTableCell('${kundali.lagnaDegree.toStringAsFixed(2)}°', isGujarati, align: TextAlign.center),
+            _buildTableCell(isGujarati ? 'ઉદય લગ્ન' : 'उदय लग्न', isGujarati, align: TextAlign.center),
+          ],
         ),
-        // 9 Planets Rows
-        ...kundali.planets.asMap().entries.map((entry) {
-          final idx = entry.key;
-          final p = entry.value;
-          final pName = isGujarati ? p.nameGu : p.nameHi;
-          final pRashiName = _getRashiName(p.rashiId, isGujarati);
-          final pLord = _getRashiLord(p.rashiId, isGujarati);
-          final pNak = p.nakshatra;
-          final motionStr = p.isRetrograde
-              ? (isGujarati ? 'વક્રી (R)' : 'वक्री (R)')
-              : (isGujarati ? 'માર્ગી' : 'मार्गी');
+        // 9 Planets
+        ...kundali.planets.map((planet) {
+          final rashiName = _getRashiName(planet.rashiId, isGujarati);
+          final dignity = KundaliCalculator.getPlanetDignity(planet);
+          final dignityLabel = isGujarati ? (dignity['labelGu'] as String) : (dignity['labelHi'] as String);
+          final retroStr = planet.isRetrograde ? (isGujarati ? ' (વક્રી)' : ' (वक्री)') : '';
 
-          return _buildTableRow(
-            planetName: pName,
-            rashi: '$pRashiName (${p.rashiId})',
-            degree: '${p.degree.toStringAsFixed(1)}°',
-            house: '${p.houseNumber}',
-            nakshatra: pNak,
-            pada: '${p.pada}',
-            lord: pLord,
-            motion: motionStr,
-            isEven: idx % 2 == 1,
-            isRetro: p.isRetrograde,
-            isGujarati: isGujarati,
+          return TableRow(
+            decoration: const BoxDecoration(color: Colors.white),
+            children: [
+              _buildTableCell('${isGujarati ? planet.nameGu : planet.nameHi}$retroStr', isGujarati),
+              _buildTableCell(rashiName, isGujarati, align: TextAlign.center),
+              _buildTableCell(isGujarati ? '${planet.houseNumber} મો' : '${planet.houseNumber} वां', isGujarati, align: TextAlign.center),
+              _buildTableCell(planet.formattedDegree, isGujarati, align: TextAlign.center),
+              _buildTableCell(dignityLabel, isGujarati, align: TextAlign.center),
+            ],
           );
         }),
       ],
     );
   }
 
-  static TableRow _buildTableRow({
-    required String planetName,
-    required String rashi,
-    required String degree,
-    required String house,
-    required String nakshatra,
-    required String pada,
-    required String lord,
-    required String motion,
-    required bool isEven,
-    required bool isRetro,
-    required bool isGujarati,
-    bool isAscendant = false,
-  }) {
-    final bgColor = isEven ? lightRow : Colors.white;
-    return TableRow(
-      decoration: BoxDecoration(color: bgColor),
-      children: [
-        _buildTableCell(planetName, isGujarati, isBold: true, color: isAscendant ? maroonColor : darkBg),
-        _buildTableCell(rashi, isGujarati, isBold: isAscendant, color: isAscendant ? maroonColor : darkBg),
-        _buildTableCell(degree, isGujarati, align: TextAlign.center),
-        _buildTableCell(house, isGujarati, align: TextAlign.center, isBold: true),
-        _buildTableCell(nakshatra, isGujarati),
-        _buildTableCell(pada, isGujarati, align: TextAlign.center),
-        _buildTableCell(lord, isGujarati),
-        _buildTableCell(
-          motion,
-          isGujarati,
-          align: TextAlign.center,
-          isBold: isRetro || isAscendant,
-          color: isRetro ? const Color(0xFFC0392B) : (isAscendant ? const Color(0xFF1E824C) : const Color(0xFF27AE60)),
-        ),
-      ],
-    );
-  }
-
-  static Widget _buildTableHeaderCell(String text, bool isGujarati) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 2),
-      child: Text(
-        text,
-        style: _fontBold(isGujarati, 7.5, Colors.white),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  static Widget _buildTableCell(
-    String text,
-    bool isGujarati, {
-    TextAlign align = TextAlign.left,
-    bool isBold = false,
-    Color color = darkBg,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.2, horizontal: 3),
-      child: Text(
-        text,
-        style: isBold ? _fontBold(isGujarati, 7.2, color) : _fontRegular(isGujarati, 7.2, color),
-        textAlign: align,
-      ),
-    );
-  }
-
   static Widget _buildAspectCard({
     required String title,
     required String desc,
+    String? badge,
     required List<String> tags,
     required bool isGujarati,
-    String? badge,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+      padding: const EdgeInsets.all(5.5),
       decoration: BoxDecoration(
         color: lightCard,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: borderCol, width: 0.9),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: borderCol, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1065,15 +1154,15 @@ class KundaliPdfA4Pages {
             children: [
               Text(
                 title,
-                style: _fontBold(isGujarati, 8.8, maroonColor),
+                style: _fontBold(isGujarati, 8.5, maroonColor),
               ),
               if (badge != null && badge.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3CD),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFFFFEEBA), width: 0.8),
+                    color: maroonColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(color: borderCol, width: 0.5),
                   ),
                   child: Text(
                     badge,
@@ -1085,24 +1174,26 @@ class KundaliPdfA4Pages {
           const SizedBox(height: 2),
           Text(
             desc,
-            style: _fontRegular(isGujarati, 7.4, darkBg, height: 1.3),
+            style: _fontRegular(isGujarati, 7.3, darkBg, height: 1.25),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           if (tags.isNotEmpty) ...[
-            const SizedBox(height: 3),
+            const SizedBox(height: 2.5),
             Wrap(
-              spacing: 4,
+              spacing: 3,
               runSpacing: 2,
-              children: tags.map((t) {
+              children: tags.take(4).map((tag) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
-                    color: maroonColor.withAlpha(14),
+                    color: lightRow,
                     borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: maroonColor.withAlpha(50), width: 0.5),
+                    border: Border.all(color: borderCol.withAlpha(150), width: 0.4),
                   ),
                   child: Text(
-                    t,
-                    style: _fontBold(isGujarati, 6.8, maroonColor),
+                    '• $tag',
+                    style: _fontRegular(isGujarati, 6.6, maroonColor),
                   ),
                 );
               }).toList(),
@@ -1119,7 +1210,7 @@ class KundaliPdfA4Pages {
     required bool isGujarati,
   }) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(4.5),
       decoration: BoxDecoration(
         color: lightRow,
         borderRadius: BorderRadius.circular(4),
@@ -1132,12 +1223,42 @@ class KundaliPdfA4Pages {
             title,
             style: _fontBold(isGujarati, 7.6, maroonColor),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 1.5),
           Text(
             desc,
-            style: _fontRegular(isGujarati, 6.9, darkBg, height: 1.25),
+            style: _fontRegular(isGujarati, 7.0, darkBg, height: 1.25),
           ),
         ],
+      ),
+    );
+  }
+
+  static Widget _buildTableHeaderCell(String text, bool isGujarati) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 3.5, horizontal: 2),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: _fontBold(isGujarati, 7.5, goldColor),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  static Widget _buildTableCell(
+    String text,
+    bool isGujarati, {
+    TextAlign align = TextAlign.left,
+    bool isBold = false,
+    Color color = darkBg,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 2.5, horizontal: 3.5),
+      alignment: align == TextAlign.center ? Alignment.center : Alignment.centerLeft,
+      child: Text(
+        text,
+        style: isBold ? _fontBold(isGujarati, 7.2, color) : _fontRegular(isGujarati, 7.2, color),
+        textAlign: align,
       ),
     );
   }
@@ -1146,7 +1267,7 @@ class KundaliPdfA4Pages {
     return Table(
       border: TableBorder.all(color: borderCol, width: 0.5),
       columnWidths: const {
-        0: FlexColumnWidth(1.8),
+        0: FlexColumnWidth(1.5),
         1: FlexColumnWidth(1.2),
         2: FlexColumnWidth(1.2),
         3: FlexColumnWidth(1.2),
@@ -1285,10 +1406,5 @@ class KundaliPdfA4Pages {
   static String _getRashiName(int rashiId, bool isGujarati) {
     final rashi = RashiData.getRashiById(rashiId);
     return isGujarati ? rashi.gujaratiName : rashi.hindiName;
-  }
-
-  static String _getRashiLord(int rashiId, bool isGujarati) {
-    final rashi = RashiData.getRashiById(rashiId);
-    return isGujarati ? rashi.rulingPlanetGujarati : rashi.rulingPlanet;
   }
 }
