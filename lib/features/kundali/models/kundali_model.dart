@@ -180,6 +180,102 @@ class MangalDoshaResult {
       );
 }
 
+class VimshottariAntardashaItem {
+  final String planetNameHi;
+  final String planetNameGu;
+  final DateTime startDate;
+  final DateTime endDate;
+  final bool isCurrent;
+  final String antardashaFalHi;
+  final String antardashaFalGu;
+
+  const VimshottariAntardashaItem({
+    required this.planetNameHi,
+    required this.planetNameGu,
+    required this.startDate,
+    required this.endDate,
+    required this.isCurrent,
+    this.antardashaFalHi = '',
+    this.antardashaFalGu = '',
+  });
+
+  Map<String, dynamic> toJson() => {
+        'planetNameHi': planetNameHi,
+        'planetNameGu': planetNameGu,
+        'startDate': startDate.toIso8601String(),
+        'endDate': endDate.toIso8601String(),
+        'isCurrent': isCurrent,
+        'antardashaFalHi': antardashaFalHi,
+        'antardashaFalGu': antardashaFalGu,
+      };
+
+  factory VimshottariAntardashaItem.fromJson(Map<String, dynamic> json) => VimshottariAntardashaItem(
+        planetNameHi: json['planetNameHi'] as String? ?? '',
+        planetNameGu: json['planetNameGu'] as String? ?? '',
+        startDate: DateTime.tryParse(json['startDate'] as String? ?? '') ?? DateTime.now(),
+        endDate: DateTime.tryParse(json['endDate'] as String? ?? '') ?? DateTime.now(),
+        isCurrent: json['isCurrent'] as bool? ?? false,
+        antardashaFalHi: json['antardashaFalHi'] as String? ?? '',
+        antardashaFalGu: json['antardashaFalGu'] as String? ?? '',
+      );
+}
+
+class AstrologicalYogaItem {
+  final String id;
+  final String nameHi;
+  final String nameGu;
+  final bool isAuspicious; // true: શુભ રાજયોગ / ધન યોગ, false: દોષ / સાવધાની
+  final String descriptionHi;
+  final String descriptionGu;
+  final String impactHi;
+  final String impactGu;
+  final String remedyHi;
+  final String remedyGu;
+  final List<String> associatedPlanets;
+
+  const AstrologicalYogaItem({
+    required this.id,
+    required this.nameHi,
+    required this.nameGu,
+    required this.isAuspicious,
+    required this.descriptionHi,
+    required this.descriptionGu,
+    required this.impactHi,
+    required this.impactGu,
+    this.remedyHi = '',
+    this.remedyGu = '',
+    this.associatedPlanets = const [],
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'nameHi': nameHi,
+        'nameGu': nameGu,
+        'isAuspicious': isAuspicious,
+        'descriptionHi': descriptionHi,
+        'descriptionGu': descriptionGu,
+        'impactHi': impactHi,
+        'impactGu': impactGu,
+        'remedyHi': remedyHi,
+        'remedyGu': remedyGu,
+        'associatedPlanets': associatedPlanets,
+      };
+
+  factory AstrologicalYogaItem.fromJson(Map<String, dynamic> json) => AstrologicalYogaItem(
+        id: json['id'] as String? ?? '',
+        nameHi: json['nameHi'] as String? ?? '',
+        nameGu: json['nameGu'] as String? ?? '',
+        isAuspicious: json['isAuspicious'] as bool? ?? true,
+        descriptionHi: json['descriptionHi'] as String? ?? '',
+        descriptionGu: json['descriptionGu'] as String? ?? '',
+        impactHi: json['impactHi'] as String? ?? '',
+        impactGu: json['impactGu'] as String? ?? '',
+        remedyHi: json['remedyHi'] as String? ?? '',
+        remedyGu: json['remedyGu'] as String? ?? '',
+        associatedPlanets: (json['associatedPlanets'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      );
+}
+
 class VimshottariDashaItem {
   final String planetNameHi;
   final String planetNameGu;
@@ -187,6 +283,7 @@ class VimshottariDashaItem {
   final DateTime endDate;
   final int durationYears;
   final bool isCurrent;
+  final List<VimshottariAntardashaItem> antardashas;
 
   const VimshottariDashaItem({
     required this.planetNameHi,
@@ -195,6 +292,7 @@ class VimshottariDashaItem {
     required this.endDate,
     required this.durationYears,
     required this.isCurrent,
+    this.antardashas = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -204,6 +302,7 @@ class VimshottariDashaItem {
         'endDate': endDate.toIso8601String(),
         'durationYears': durationYears,
         'isCurrent': isCurrent,
+        'antardashas': antardashas.map((a) => a.toJson()).toList(),
       };
 
   factory VimshottariDashaItem.fromJson(Map<String, dynamic> json) => VimshottariDashaItem(
@@ -213,6 +312,10 @@ class VimshottariDashaItem {
         endDate: DateTime.tryParse(json['endDate'] as String? ?? '') ?? DateTime.now(),
         durationYears: json['durationYears'] as int? ?? 0,
         isCurrent: json['isCurrent'] as bool? ?? false,
+        antardashas: (json['antardashas'] as List<dynamic>?)
+                ?.map((e) => VimshottariAntardashaItem.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
 }
 
@@ -308,6 +411,7 @@ class KundaliLifePrediction {
   final LifeAspectPrediction healthPrediction; // આરોગ્ય અને સુખાકારી
   final List<String> rajaYogasHi; // વિશેષ રાજયોગ
   final List<String> rajaYogasGu;
+  final List<AstrologicalYogaItem> yogas;
   final String luckyDirection;
   final String ishtaDevataHi;
   final String ishtaDevataGu;
@@ -322,6 +426,7 @@ class KundaliLifePrediction {
     required this.healthPrediction,
     this.rajaYogasHi = const [],
     this.rajaYogasGu = const [],
+    this.yogas = const [],
     required this.luckyDirection,
     required this.ishtaDevataHi,
     required this.ishtaDevataGu,
@@ -337,6 +442,7 @@ class KundaliLifePrediction {
         'healthPrediction': healthPrediction.toJson(),
         'rajaYogasHi': rajaYogasHi,
         'rajaYogasGu': rajaYogasGu,
+        'yogas': yogas.map((y) => y.toJson()).toList(),
         'luckyDirection': luckyDirection,
         'ishtaDevataHi': ishtaDevataHi,
         'ishtaDevataGu': ishtaDevataGu,
@@ -410,6 +516,10 @@ class KundaliLifePrediction {
           'બુધાદિત્ય રાજયોગ (સૂર્ય + બુધની યુતિ - તીક્ષ્ણ બુદ્ધિપ્રતિભા, પ્રશાસનિક સફળતા અને સમાજમાં ઊંચી પ્રતિષ્ઠા)',
           'ગજકેસરી યોગ (ગુરુ-ચંદ્ર કેન્દ્ર - અપરંપાર યશ-કીર્તિ, જ્ઞાન, સંપત્તિ અને સન્માન)',
         ],
+        yogas: (json['yogas'] as List<dynamic>?)
+                ?.map((e) => AstrologicalYogaItem.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
         luckyDirection: json['luckyDirection'] as String? ?? 'ઉત્તર-પૂર્વ (North-East)',
         ishtaDevataHi: json['ishtaDevataHi'] as String? ?? 'भगवान देवाधिदेव महादेव शिव',
         ishtaDevataGu: json['ishtaDevataGu'] as String? ?? 'ભગવાન દેવાધિદેવ મહાદેવ શિવજી',
@@ -609,5 +719,55 @@ class KundaliResult {
             ? KundaliLifePrediction.fromJson(json['lifePrediction'] as Map<String, dynamic>)
             : KundaliLifePrediction.fromJson({}),
       );
+}
+
+class DoshaAnalysisResult {
+  final bool hasKaalSarp;
+  final String kaalSarpNameGu;
+  final String kaalSarpNameHi;
+  final String kaalSarpDescGu;
+  final String kaalSarpDescHi;
+
+  final String shaniStatusGu;
+  final String shaniStatusHi;
+  final String shaniDescGu;
+  final String shaniDescHi;
+
+  final String vedicMantraGu;
+  final String vedicMantraHi;
+  final String upayGu;
+  final String upayHi;
+  final String rudrakshaGu;
+  final String rudrakshaHi;
+  final String gemstoneGu;
+  final String gemstoneHi;
+  final String powerfulGemstoneGu;
+  final String powerfulGemstoneHi;
+  final String avoidGemstoneGu;
+  final String avoidGemstoneHi;
+
+  const DoshaAnalysisResult({
+    required this.hasKaalSarp,
+    required this.kaalSarpNameGu,
+    required this.kaalSarpNameHi,
+    required this.kaalSarpDescGu,
+    required this.kaalSarpDescHi,
+    required this.shaniStatusGu,
+    required this.shaniStatusHi,
+    required this.shaniDescGu,
+    required this.shaniDescHi,
+    required this.vedicMantraGu,
+    required this.vedicMantraHi,
+    required this.upayGu,
+    required this.upayHi,
+    required this.rudrakshaGu,
+    required this.rudrakshaHi,
+    required this.gemstoneGu,
+    required this.gemstoneHi,
+    this.powerfulGemstoneGu = '',
+    this.powerfulGemstoneHi = '',
+    this.avoidGemstoneGu = '',
+    this.avoidGemstoneHi = '',
+  });
 }
 

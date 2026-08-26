@@ -8,6 +8,7 @@ import '../../../core/constants/rashi_data.dart';
 import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../models/kundali_model.dart';
+import '../services/kundali_calculator.dart';
 import '../services/kundali_pdf_service.dart';
 import '../widgets/kundali_chart_painter.dart';
 
@@ -628,52 +629,61 @@ class _KundaliPdfViewerScreenState extends State<KundaliPdfViewerScreen> {
           const SizedBox(height: 12),
 
           // 3. Kaal Sarp & Shani Sade Sati Deep Analysis Card
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2A1010) : const Color(0xFFFFF0E0),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.gold, width: 1.2),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Builder(
+            builder: (context) {
+              final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+                planets: k.planets,
+                moonRashiId: k.moonRashiId,
+                lagnaRashiId: k.lagnaRashiId,
+              );
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A1010) : const Color(0xFFFFF0E0),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gold, width: 1.2),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.auto_awesome_rounded, color: AppColors.goldLight, size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        isGu ? 'વિશેષ કાળસર્પ & સાડાસાતી વિશ્લેષણ' : 'विशेष कालसर्प एवं साढ़ेसाती विश्लेषण',
-                        style: GoogleFonts.cinzel(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_awesome_rounded, color: AppColors.goldLight, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isGu ? 'વિશેષ કાળસર્પ & સાડાસાતી વિશ્લેષણ' : 'विशेष कालसर्प एवं साढ़ेसाती विश्लेषण',
+                            style: GoogleFonts.cinzel(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isGu
+                          ? '• કાળસર્પ સ્થિતિ: [${doshaAnalysis.kaalSarpNameGu}] ${doshaAnalysis.kaalSarpDescGu}\n• શનિ સાડાસાતી: [${doshaAnalysis.shaniStatusGu}] ${doshaAnalysis.shaniDescGu}'
+                          : '• कालसर्प स्थिति: [${doshaAnalysis.kaalSarpNameHi}] ${doshaAnalysis.kaalSarpDescHi}\n• शनि साढ़ेसाती: [${doshaAnalysis.shaniStatusHi}] ${doshaAnalysis.shaniDescHi}',
+                      style: isGu
+                          ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, height: 1.4, color: isDark ? Colors.white70 : Colors.black87)
+                          : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, height: 1.4, color: isDark ? Colors.white70 : Colors.black87),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isGu
+                          ? '${doshaAnalysis.vedicMantraGu}\n${doshaAnalysis.rudrakshaGu.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneGu.replaceAll('• ', '')}\n${doshaAnalysis.powerfulGemstoneGu}\n${doshaAnalysis.avoidGemstoneGu}'
+                          : '${doshaAnalysis.vedicMantraHi}\n${doshaAnalysis.rudrakshaHi.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneHi.replaceAll('• ', '')}\n${doshaAnalysis.powerfulGemstoneHi}\n${doshaAnalysis.avoidGemstoneHi}',
+                      style: isGu
+                          ? GoogleFonts.notoSerifGujarati(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.goldLight : AppColors.maroonPrimary)
+                          : GoogleFonts.notoSerifDevanagari(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.goldLight : AppColors.maroonPrimary),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  isGu
-                      ? '• કાળસર્પ સ્થિતિ: રાહુ-કેતુ અક્ષમાં ગ્રહોની સ્થિતિ અનુકૂળ છે. આર્થિક ઉતાર-ચઢાવથી બચવા શિવ આરાધના શ્રેષ્ઠ રહેશે.\n• શનિ સાડાસાતી: પરિશ્રમનું ઉત્તમ ફળ મળશે, ધીરજ અને સદાચાર જાળવવો.'
-                      : '• कालसर्प स्थिति: राहु-केतु अक्ष में ग्रहों की स्थिति अनुकूल है। आर्थिक उतार-चढ़ाव से बचाव हेतु शिव आराधना करें।\n• शनि साढ़ेसाती: परिश्रम का उत्तम फल मिलेगा, धैर्य एवं सदाचार बनाए रखें।',
-                  style: isGu
-                      ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, height: 1.4, color: isDark ? Colors.white70 : Colors.black87)
-                      : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, height: 1.4, color: isDark ? Colors.white70 : Colors.black87),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  isGu
-                      ? '• વૈદિક મંત્ર: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्" (દરરોજ ૧૧ વાર જાપ કરવો) | રુદ્રાક્ષ: ૭ અથવા ૮ મુખી'
-                      : '• वैदिक मन्त्र: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्" (नित्य ११ बार जप करें) | रुद्राक्ष: ७ अथवा ८ मुखी',
-                  style: isGu
-                      ? GoogleFonts.notoSerifGujarati(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.goldLight : AppColors.maroonPrimary)
-                      : GoogleFonts.notoSerifDevanagari(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.goldLight : AppColors.maroonPrimary),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 12),
 

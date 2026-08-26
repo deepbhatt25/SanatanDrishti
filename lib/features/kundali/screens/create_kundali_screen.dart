@@ -354,9 +354,7 @@ class _CreateKundaliScreenState extends State<CreateKundaliScreen> {
       },
     );
   }
-
-
-  @override
+@override
   Widget build(BuildContext context) {
     final langProvider = context.watch<LanguageProvider>();
     final kundaliProvider = context.watch<KundaliProvider>();
@@ -371,15 +369,64 @@ class _CreateKundaliScreenState extends State<CreateKundaliScreen> {
         showOm: false,
         showLanguageToggle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.folder_shared_rounded, color: AppColors.goldLight),
-            tooltip: AppStrings.savedKundalis(currentLang),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SavedKundalisScreen()),
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 8, top: 10, bottom: 10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SavedKundalisScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withAlpha(50),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.goldLight, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(30),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.folder_shared_rounded, color: AppColors.goldLight, size: 15),
+                    const SizedBox(width: 5),
+                    Text(
+                      isGujarati ? 'સાચવેલ' : 'सहेजी गई',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.goldLight,
+                      ),
+                    ),
+                    if (kundaliProvider.savedKundalis.isNotEmpty) ...[
+                      const SizedBox(width: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: const BoxDecoration(
+                          color: AppColors.saffronPrimary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${kundaliProvider.savedKundalis.length}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -447,14 +494,132 @@ class _CreateKundaliScreenState extends State<CreateKundaliScreen> {
                                 ? 'લગ્ન ચક્ર, નવમાંશ, ૧૨ ભાવ અને વિંશોત્તરી દશા'
                                 : 'लग्न चक्र, नवमांश, १२ भाव एवं विंशोत्तरी दशा',
                             style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              color: AppColors.goldLight.withAlpha(220),
+                              fontSize: 11.5,
+                              color: Colors.white70,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // Saved Kundalis & Downloaded Files Quick Access Banner
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SavedKundalisScreen()),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(top: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2E1B13) : const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.gold.withAlpha(isDark ? 140 : 200),
+                      width: 1.4,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.saffronPrimary.withAlpha(isDark ? 30 : 20),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          color: AppColors.saffronPrimary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.saffronPrimary.withAlpha(90)),
+                        ),
+                        child: const Icon(
+                          Icons.folder_special_rounded,
+                          color: AppColors.saffronPrimary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  isGujarati ? 'સાચવેલી કુંડળીઓ & PDF ફાઇલો' : 'सहेजी गई कुंडलियां एवं PDF फाइल्स',
+                                  style: isGujarati
+                                      ? GoogleFonts.notoSerifGujarati(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                        )
+                                      : GoogleFonts.notoSerifDevanagari(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                        ),
+                                ),
+                                if (kundaliProvider.savedKundalis.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.saffronPrimary,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${kundaliProvider.savedKundalis.length}',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isGujarati
+                                  ? (kundaliProvider.savedKundalis.isNotEmpty
+                                      ? 'તમારી ${kundaliProvider.savedKundalis.length} સાચવેલ કુંડળીઓ અને PDF રિપોર્ટ જોવા અહીં ટેપ કરો'
+                                      : 'અગાઉ સાચવેલી કુંડળીઓ અને PDF જોવા અહીં ટેપ કરો')
+                                  : (kundaliProvider.savedKundalis.isNotEmpty
+                                      ? 'आपकी ${kundaliProvider.savedKundalis.length} सहेजी गई कुंडलियां और PDF देखने के लिए यहां टैप करें'
+                                      : 'पूर्व में सहेजी गई कुंडलियां और PDF देखने के लिए यहां टैप करें'),
+                              style: GoogleFonts.outfit(
+                                fontSize: 11,
+                                color: isDark ? Colors.white60 : Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold.withAlpha(isDark ? 40 : 25),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 13,
+                          color: AppColors.saffronPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 

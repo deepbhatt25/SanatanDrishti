@@ -6,6 +6,9 @@ class BabyRashiModel {
   final String rashiSymbol;
   final String rashiStartTime;
   final String rashiEndTime;
+  final String prevRashiHindi;
+  final String prevRashiGujarati;
+  final String prevRashiEn;
   final String nextRashiHindi;
   final String nextRashiGujarati;
   final String nextRashiEn;
@@ -15,6 +18,8 @@ class BabyRashiModel {
   final int pada;
   final String nakshatraStartTime;
   final String nakshatraEndTime;
+  final String prevNakshatraHindi;
+  final String prevNakshatraGujarati;
   final String nextNakshatraHindi;
   final String nextNakshatraGujarati;
 
@@ -22,6 +27,8 @@ class BabyRashiModel {
   final String tithiGujarati;
   final String tithiStartTime;
   final String tithiEndTime;
+  final String prevTithiHindi;
+  final String prevTithiGujarati;
   final String nextTithiHindi;
   final String nextTithiGujarati;
 
@@ -29,6 +36,8 @@ class BabyRashiModel {
   final String yogaGujarati;
   final String yogaStartTime;
   final String yogaEndTime;
+  final String prevYogaHindi;
+  final String prevYogaGujarati;
   final String nextYogaHindi;
   final String nextYogaGujarati;
 
@@ -36,6 +45,8 @@ class BabyRashiModel {
   final String karanaGujarati;
   final String karanaStartTime;
   final String karanaEndTime;
+  final String prevKaranaHindi;
+  final String prevKaranaGujarati;
   final String nextKaranaHindi;
   final String nextKaranaGujarati;
 
@@ -43,6 +54,8 @@ class BabyRashiModel {
   final String vaarGujarati;
   final String vaarStartTime;
   final String vaarEndTime;
+  final String prevVaarHindi;
+  final String prevVaarGujarati;
   final String nextVaarHindi;
   final String nextVaarGujarati;
 
@@ -60,6 +73,10 @@ class BabyRashiModel {
   final String favorableColorsGujarati;
   final String favorableGemstone;
   final String favorableGemstoneGujarati;
+  final List<String> boyNames;
+  final List<String> boyNamesGujarati;
+  final List<String> girlNames;
+  final List<String> girlNamesGujarati;
 
   const BabyRashiModel({
     required this.birthDateTime,
@@ -69,6 +86,9 @@ class BabyRashiModel {
     required this.rashiSymbol,
     this.rashiStartTime = '',
     this.rashiEndTime = '',
+    this.prevRashiHindi = '',
+    this.prevRashiGujarati = '',
+    this.prevRashiEn = '',
     this.nextRashiHindi = '',
     this.nextRashiGujarati = '',
     this.nextRashiEn = '',
@@ -77,30 +97,40 @@ class BabyRashiModel {
     required this.pada,
     this.nakshatraStartTime = '',
     this.nakshatraEndTime = '',
+    this.prevNakshatraHindi = '',
+    this.prevNakshatraGujarati = '',
     this.nextNakshatraHindi = '',
     this.nextNakshatraGujarati = '',
     this.tithiHindi = '',
     this.tithiGujarati = '',
     this.tithiStartTime = '',
     this.tithiEndTime = '',
+    this.prevTithiHindi = '',
+    this.prevTithiGujarati = '',
     this.nextTithiHindi = '',
     this.nextTithiGujarati = '',
     this.yogaHindi = '',
     this.yogaGujarati = '',
     this.yogaStartTime = '',
     this.yogaEndTime = '',
+    this.prevYogaHindi = '',
+    this.prevYogaGujarati = '',
     this.nextYogaHindi = '',
     this.nextYogaGujarati = '',
     this.karanaHindi = '',
     this.karanaGujarati = '',
     this.karanaStartTime = '',
     this.karanaEndTime = '',
+    this.prevKaranaHindi = '',
+    this.prevKaranaGujarati = '',
     this.nextKaranaHindi = '',
     this.nextKaranaGujarati = '',
     this.vaarHindi = '',
     this.vaarGujarati = '',
     this.vaarStartTime = '',
     this.vaarEndTime = '',
+    this.prevVaarHindi = '',
+    this.prevVaarGujarati = '',
     this.nextVaarHindi = '',
     this.nextVaarGujarati = '',
     required this.rulingPlanet,
@@ -117,5 +147,9 @@ class BabyRashiModel {
     required this.favorableColorsGujarati,
     required this.favorableGemstone,
     required this.favorableGemstoneGujarati,
+    this.boyNames = const [],
+    this.boyNamesGujarati = const [],
+    this.girlNames = const [],
+    this.girlNamesGujarati = const [],
   });
 }

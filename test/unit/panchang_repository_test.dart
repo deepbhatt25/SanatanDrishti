@@ -68,7 +68,44 @@ void main() {
       expect(choghadiya.nightChoghadiya.first.nameHindi, 'काल');
     });
 
-    test('Calculates Baby Born Rashi and Namakshar for given birth time', () {
+    test('Calculates start time, end time, previous, and upcoming for all 5 angas and rashis', () {
+      final testDate = DateTime(2026, 8, 26);
+      final city = LocationService.getCityByName('New Delhi');
+
+      final panchang = PanchangRepository.calculateVedicPanchang(testDate, city);
+
+      // Tithi
+      expect(panchang.tithiEndTime, isNotEmpty);
+      expect(panchang.prevTithi, isNotEmpty);
+      expect(panchang.nextTithi, isNotEmpty);
+      expect(panchang.prevTithiGujarati, isNotEmpty);
+      expect(panchang.nextTithiGujarati, isNotEmpty);
+
+      // Nakshatra
+      expect(panchang.nakshatraEndTime, isNotEmpty);
+      expect(panchang.prevNakshatra, isNotEmpty);
+      expect(panchang.nextNakshatra, isNotEmpty);
+
+      // Yoga
+      expect(panchang.yogaEndTime, isNotEmpty);
+      expect(panchang.prevYoga, isNotEmpty);
+      expect(panchang.nextYoga, isNotEmpty);
+
+      // Karana
+      expect(panchang.karanaEndTime, isNotEmpty);
+      expect(panchang.prevKarana, isNotEmpty);
+      expect(panchang.nextKarana, isNotEmpty);
+
+      // Chandra Rashi & Sun Rashi
+      expect(panchang.rashiEndTime, isNotEmpty);
+      expect(panchang.prevRashi, isNotEmpty);
+      expect(panchang.nextRashi, isNotEmpty);
+      expect(panchang.sunRashi, isNotEmpty);
+      expect(panchang.prevSunRashi, isNotEmpty);
+      expect(panchang.nextSunRashi, isNotEmpty);
+    });
+
+    test('Calculates Baby Born Rashi and Namakshar with start/end and previous/next rashi', () {
       final city = LocationService.getCityByName('New Delhi');
       final birthTime = DateTime(2026, 8, 25, 14, 30); // 2:30 PM
 
@@ -76,7 +113,13 @@ void main() {
 
       expect(babyRashi.rashiHindi, isNotEmpty);
       expect(babyRashi.rashiSymbol, isNotEmpty);
+      expect(babyRashi.rashiEndTime, isNotEmpty);
+      expect(babyRashi.prevRashiHindi, isNotEmpty);
+      expect(babyRashi.nextRashiHindi, isNotEmpty);
       expect(babyRashi.nakshatraHindi, isNotEmpty);
+      expect(babyRashi.nakshatraEndTime, isNotEmpty);
+      expect(babyRashi.prevNakshatraHindi, isNotEmpty);
+      expect(babyRashi.nextNakshatraHindi, isNotEmpty);
       expect(babyRashi.pada, inInclusiveRange(1, 4));
       expect(babyRashi.allPadaNamakshar.length, 4);
       expect(babyRashi.recommendedLetter, isNotEmpty);

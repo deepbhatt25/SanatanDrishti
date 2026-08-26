@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../../../core/providers/language_provider.dart';
 import '../../../core/services/location_service.dart';
 import '../models/baby_rashi_model.dart';
 import '../repositories/panchang_repository.dart';
+import 'baby_name_suggestions_screen.dart';
 
 class BabyRashiSheet extends StatefulWidget {
   final DateTime initialDate;
@@ -357,6 +359,7 @@ class _BabyRashiSheetState extends State<BabyRashiSheet> {
                     child: Column(
                       children: [
                         // Symbol Emblem
+                        // Symbol Emblem (First letter of Rashi)
                         Container(
                           width: 68,
                           height: 68,
@@ -373,8 +376,10 @@ class _BabyRashiSheetState extends State<BabyRashiSheet> {
                           ),
                           child: Center(
                             child: Text(
-                              babyRashi.rashiSymbol,
-                              style: const TextStyle(fontSize: 34, color: AppColors.goldLight),
+                              rashiName.isNotEmpty ? rashiName.characters.first : 'ૐ',
+                              style: isGujarati
+                                  ? GoogleFonts.notoSerifGujarati(fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.goldLight)
+                                  : GoogleFonts.notoSerifDevanagari(fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.goldLight),
                             ),
                           ),
                         ),
@@ -408,7 +413,34 @@ class _BabyRashiSheetState extends State<BabyRashiSheet> {
                                   color: isDark ? Colors.white : AppColors.maroonPrimary,
                                 ),
                         ),
-                        const SizedBox(height: 6),
+                        if (babyRashi.rashiEndTime.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            babyRashi.rashiStartTime.isNotEmpty
+                                ? '${babyRashi.rashiStartTime} – ${babyRashi.rashiEndTime}'
+                                : '${isGujarati ? 'સમાપ્તિ' : 'समाप्ति'}: ${babyRashi.rashiEndTime}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                            ),
+                          ),
+                        ],
+                        if (babyRashi.prevRashiGujarati.isNotEmpty || babyRashi.nextRashiGujarati.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            isGujarati
+                                ? 'પહેલાં: ${babyRashi.prevRashiGujarati}  |  આગામી: ${babyRashi.nextRashiGujarati}'
+                                : 'पूर्व: ${babyRashi.prevRashiHindi}  |  आगामी: ${babyRashi.nextRashiHindi}',
+                            style: isGujarati
+                                ? GoogleFonts.notoSerifGujarati(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54)
+                                : GoogleFonts.notoSerifDevanagari(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
                         Text(
                           '${AppStrings.janmaNakshatra(currentLang)}: $nakshatraName  •  ${AppStrings.charan(currentLang)} ${langProvider.formatNumber(babyRashi.pada)}',
                           style: isGujarati
@@ -423,6 +455,30 @@ class _BabyRashiSheetState extends State<BabyRashiSheet> {
                                   color: isDark ? AppColors.goldLight : AppColors.maroonLight,
                                 ),
                         ),
+                        if (babyRashi.nakshatraEndTime.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            babyRashi.nakshatraStartTime.isNotEmpty
+                                ? '${babyRashi.nakshatraStartTime} – ${babyRashi.nakshatraEndTime}'
+                                : '${isGujarati ? 'સમાપ્તિ' : 'समाप्ति'}: ${babyRashi.nakshatraEndTime}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.5,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                        if (babyRashi.prevNakshatraGujarati.isNotEmpty || babyRashi.nextNakshatraGujarati.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            isGujarati
+                                ? 'પહેલાં: ${babyRashi.prevNakshatraGujarati}  |  આગામી: ${babyRashi.nextNakshatraGujarati}'
+                                : 'पूर्व: ${babyRashi.prevNakshatraHindi}  |  आगामी: ${babyRashi.nextNakshatraHindi}',
+                            style: isGujarati
+                                ? GoogleFonts.notoSerifGujarati(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54)
+                                : GoogleFonts.notoSerifDevanagari(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -567,6 +623,260 @@ class _BabyRashiSheetState extends State<BabyRashiSheet> {
 
                   const SizedBox(height: 18),
 
+                  // Auspicious Baby Boy & Girl Name Suggestions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          isGujarati ? 'શુભ નામોનું સૂચન' : 'शुभ नाम सुझाव',
+                          style: isGujarati
+                              ? GoogleFonts.notoSerifGujarati(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                )
+                              : GoogleFonts.notoSerifDevanagari(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          final rashiIdx = _getRashiIndex(babyRashi.rashiEn);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BabyNameSuggestionsScreen(
+                                initialRashiIndex: rashiIdx,
+                              ),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            gradient: AppColors.saffronGradient,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.saffronPrimary.withAlpha(80),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                isGujarati ? '૧૦૦૦+ નામો જુઓ' : '1000+ नाम देखें',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_forward_rounded, size: 13, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Boy Names Container
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.face_rounded, size: 18, color: AppColors.saffronPrimary),
+                            const SizedBox(width: 8),
+                            Text(
+                              isGujarati ? 'બાળકના શુભ નામો (Baby Boy Names)' : 'बालक के शुभ नाम (Baby Boy Names)',
+                              style: isGujarati
+                                  ? GoogleFonts.notoSerifGujarati(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                    )
+                                  : GoogleFonts.notoSerifDevanagari(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                    ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: (isGujarati ? babyRashi.boyNamesGujarati : babyRashi.boyNames).map((name) {
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: name));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isGujarati ? '$name કૉપી થયું!' : '$name कॉपी हुआ!'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.surfaceDark : AppColors.bgLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: isGujarati
+                                          ? GoogleFonts.notoSerifGujarati(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                            )
+                                          : GoogleFonts.notoSerifDevanagari(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                            ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.copy_rounded,
+                                      size: 11,
+                                      color: isDark ? Colors.white38 : Colors.black38,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Girl Names Container
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.face_3_rounded, size: 18, color: Color(0xFFE91E63)),
+                            const SizedBox(width: 8),
+                            Text(
+                              isGujarati ? 'બાળકીના શુભ નામો (Baby Girl Names)' : 'बालिका के शुभ नाम (Baby Girl Names)',
+                              style: isGujarati
+                                  ? GoogleFonts.notoSerifGujarati(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                    )
+                                  : GoogleFonts.notoSerifDevanagari(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                    ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: (isGujarati ? babyRashi.girlNamesGujarati : babyRashi.girlNames).map((name) {
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: name));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isGujarati ? '$name કૉપી થયું!' : '$name कॉपी हुआ!'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.surfaceDark : AppColors.bgLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: isGujarati
+                                          ? GoogleFonts.notoSerifGujarati(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                            )
+                                          : GoogleFonts.notoSerifDevanagari(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                            ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.copy_rounded,
+                                      size: 11,
+                                      color: isDark ? Colors.white38 : Colors.black38,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
                   // Vedic Astrological Attributes Grid
                   Text(
                     isGujarati ? 'વૈદિક ગુણ અને તત્વ વિગત' : 'वैदिक गुण एवं तत्व विवरण',
@@ -650,5 +960,14 @@ class _BabyRashiSheetState extends State<BabyRashiSheet> {
         ),
       ],
     );
+  }
+
+  int _getRashiIndex(String rashiEn) {
+    const list = [
+      'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+      'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+    ];
+    final idx = list.indexWhere((element) => rashiEn.toLowerCase().contains(element.toLowerCase()));
+    return idx != -1 ? idx : 9;
   }
 }

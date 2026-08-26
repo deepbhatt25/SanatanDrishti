@@ -13,6 +13,7 @@ import '../providers/rashi_provider.dart';
 import '../widgets/rashi_card.dart';
 import '../widgets/rashi_wheel.dart';
 import 'rashi_detail_screen.dart';
+import 'mantra_japa_screen.dart';
 
 
 class RashiScreen extends StatefulWidget {
@@ -243,6 +244,110 @@ class _RashiScreenState extends State<RashiScreen> {
                     ),
                     child: Text(
                       isGujarati ? 'બનાવો' : 'बनाएं',
+                      style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Mantra Japa Mala & Navagraha Chanting Banner
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: isDark
+                    ? LinearGradient(
+                        colors: [AppColors.maroonPrimary.withAlpha(180), const Color(0xFF1E0404)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : LinearGradient(
+                        colors: [AppColors.saffronPrimary.withAlpha(25), AppColors.gold.withAlpha(20)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? AppColors.gold.withAlpha(60) : AppColors.gold.withAlpha(120),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(isDark ? 40 : 10),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold.withAlpha(40),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.circle_outlined,
+                      color: AppColors.gold,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              isGujarati ? 'મંત્ર જાપ માળા & નવગ્રહ' : 'मन्त्र जप माला एवं नवग्रह',
+                              style: isGujarati
+                                  ? GoogleFonts.notoSerifGujarati(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                    )
+                                  : GoogleFonts.notoSerifDevanagari(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                    ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isGujarati
+                              ? '$defaultRashiName રાશિ તથા નવગ્રહ જાપ સંકલ્પ અને માળા'
+                              : '$defaultRashiName राशि एवं नवग्रह जप संकल्प और माला',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MantraJapaScreen(rashi: defaultRashi),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(
+                      isGujarati ? 'જાપ કરો' : 'जप करें',
                       style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ),

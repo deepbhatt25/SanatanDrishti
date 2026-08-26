@@ -11,6 +11,7 @@ import '../../../core/widgets/ad_banner_widget.dart';
 import '../../../core/widgets/ad_reward_dialog.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../models/kundali_model.dart';
+import '../services/kundali_calculator.dart';
 import '../services/kundali_pdf_service.dart';
 import '../widgets/kundali_chart_painter.dart';
 import 'kundali_pdf_viewer_screen.dart';
@@ -28,6 +29,7 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
   late TabController _tabController;
   int _selectedChartType = 0; // 0: Lagna (D1), 1: Navamsha (D9), 2: Chandra
   bool _isDoshaUnlocked = false;
+  final Set<int> _expandedDashaIndices = {0}; // default expand the current/first Mahadasha
 
   @override
   void initState() {
@@ -601,12 +603,13 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
     final k = widget.kundali;
     final pred = k.lifePrediction;
     final dosha = k.mangalDosha;
-    final yogas = isGujarati ? pred.rajaYogasGu : pred.rajaYogasHi;
+    final auspiciousYogas = pred.yogas.where((y) => y.isAuspicious).toList();
+    final inauspiciousYogas = pred.yogas.where((y) => !y.isAuspicious).toList();
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // 1. Raja Yogas Section
+        // 1. Shubha Raja Yogas & Dhan Yogas Section
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -625,7 +628,7 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      isGujarati ? 'કુંડળીના વિશેષ રાજયોગ અને ધન યોગ' : 'कुंडली के विशेष राजयोग एवं धन योग',
+                      isGujarati ? 'કુંડળીના શુભ રાજયોગ અને ધન યોગ' : 'कुंडली के शुभ राजयोग एवं धन योग',
                       style: isGujarati
                           ? GoogleFonts.notoSerifGujarati(
                               fontSize: 16,
@@ -639,48 +642,128 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
                             ),
                     ),
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withAlpha(isDark ? 50 : 25),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.withAlpha(100)),
+                    ),
+                    child: Text(
+                      '${auspiciousYogas.isNotEmpty ? auspiciousYogas.length : pred.rajaYogasGu.length} ${isGujarati ? 'યોગ' : 'योग'}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              ...yogas.map((yoga) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.saffronPrimary.withAlpha(isDark ? 30 : 15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.gold.withAlpha(100)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle_rounded, color: AppColors.saffronPrimary, size: 18),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          yoga,
-                          style: isGujarati
-                              ? GoogleFonts.notoSerifGujarati(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.4,
-                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                                )
-                              : GoogleFonts.notoSerifDevanagari(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.4,
-                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                                ),
+              if (auspiciousYogas.isNotEmpty)
+                ...auspiciousYogas.map((yoga) => _buildYogaCard(yoga, isDark, isGujarati))
+              else
+                ...pred.rajaYogasGu.map((yoga) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.saffronPrimary.withAlpha(isDark ? 30 : 15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.gold.withAlpha(100)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.check_circle_rounded, color: AppColors.saffronPrimary, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            yoga,
+                            style: isGujarati
+                                ? GoogleFonts.notoSerifGujarati(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.4,
+                                    color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                  )
+                                : GoogleFonts.notoSerifDevanagari(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.4,
+                                    color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                  ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                      ],
+                    ),
+                  );
+                }),
             ],
           ),
         ),
+
+        // 2. Inauspicious / Dosha Combinations Section (if any detected)
+        if (inauspiciousYogas.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.orange.withAlpha(isDark ? 100 : 140),
+                width: 1.2,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        isGujarati ? 'દોષ & સાવધાની વિશ્લેષણ' : 'दोष एवं सावधानी विश्लेषण',
+                        style: isGujarati
+                            ? GoogleFonts.notoSerifGujarati(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.orangeAccent : Colors.deepOrange,
+                              )
+                            : GoogleFonts.notoSerifDevanagari(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.orangeAccent : Colors.deepOrange,
+                              ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withAlpha(isDark ? 50 : 25),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withAlpha(100)),
+                      ),
+                      child: Text(
+                        isGujarati ? 'ઉપાય જરૂરી' : 'उपाय आवश्यक',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...inauspiciousYogas.map((yoga) => _buildYogaCard(yoga, isDark, isGujarati)),
+              ],
+            ),
+          ),
+        ],
 
         const SizedBox(height: 16),
 
@@ -888,83 +971,97 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
                 const SizedBox(height: 12),
 
                 // 1. Kaal Sarp & Shani Sade Sati Deep Analysis
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(50),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.gold.withAlpha(70)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.auto_awesome_rounded, color: AppColors.goldLight, size: 16),
-                          const SizedBox(width: 6),
-                          Text(
-                            isGujarati ? 'દોષ વિશ્લેષણ & ગ્રહ પ્રભાવ' : 'दोष विश्लेषण एवं ग्रह प्रभाव',
-                            style: GoogleFonts.cinzel(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.goldLight,
-                            ),
+                Builder(
+                  builder: (context) {
+                    final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+                      planets: k.planets,
+                      moonRashiId: k.moonRashiId,
+                      lagnaRashiId: k.lagnaRashiId,
+                    );
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(50),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.gold.withAlpha(70)),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        isGujarati
-                            ? '• કાળસર્પ સ્થિતિ: રાહુ-કેતુ અક્ષમાં ગ્રહોની સ્થિતિ સામાન્ય છે. આર્થિક ઉતાર-ચઢાવથી બચવા શિવ આરાધના શ્રેષ્ઠ છે.\n• શનિ સાડાસાતી/ઢૈય્યા: શનિદેવનું ગોચર પરિશ્રમનું ઉત્તમ ફળ આપશે, પરંતુ ધીરજ અને સદાચાર જાળવવો આવશ્યક છે.'
-                            : '• कालसर्प स्थिति: राहु-केतु अक्ष में ग्रहों की स्थिति सामान्य है। आर्थिक उतार-चढ़ाव से बचने हेतु शिव आराधना श्रेष्ठ है।\n• शनि साढ़ेसाती/ढैया: शनिदेव का गोचर परिश्रम का उत्तम फल देगा, किन्तु धैर्य एवं सदाचार बनाए रखना आवश्यक है।',
-                        style: isGujarati
-                            ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5)
-                            : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // 2. Sacred Vedic Remedies
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(50),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.gold.withAlpha(70)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.spa_rounded, color: AppColors.goldLight, size: 16),
-                          const SizedBox(width: 6),
-                          Text(
-                            isGujarati ? 'વૈદિક મંત્ર & રુદ્રાક્ષ ઉપાય' : 'वैदिक मन्त्र एवं रुद्राक्ष उपाय',
-                            style: GoogleFonts.cinzel(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.goldLight,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.auto_awesome_rounded, color: AppColors.goldLight, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isGujarati ? 'દોષ વિશ્લેષણ & ગ્રહ પ્રભાવ' : 'दोष विश्लेषण एवं ग्रह प्रभाव',
+                                    style: GoogleFonts.cinzel(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.goldLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                isGujarati
+                                    ? '• કાળસર્પ સ્થિતિ: [${doshaAnalysis.kaalSarpNameGu}] ${doshaAnalysis.kaalSarpDescGu}\n\n• શનિ સાડાસાતી/ઢૈય્યા: [${doshaAnalysis.shaniStatusGu}] ${doshaAnalysis.shaniDescGu}'
+                                    : '• कालसर्प स्थिति: [${doshaAnalysis.kaalSarpNameHi}] ${doshaAnalysis.kaalSarpDescHi}\n\n• शनि साढ़ेसाती/ढैया: [${doshaAnalysis.shaniStatusHi}] ${doshaAnalysis.shaniDescHi}',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5)
+                                    : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        isGujarati
-                            ? '• મંત્ર: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्" (દરરોજ ૧૧ વાર જાપ કરવો)\n• ઉપાય: શનિવારે પીપળાના વૃક્ષ નીચે સરસવના તેલનો દીવો પ્રગટાવવો.\n• રુદ્રાક્ષ: ૭ મુખી અથવા ૮ મુખી રુદ્રાક્ષ ધારણ કરવો શ્રેષ્ઠ રહેશે.'
-                            : '• मन्त्र: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्" (नित्य ११ बार जप करें)\n• उपाय: शनिवार को पीपल वृक्ष के नीचे सरसों के तेल का दीपक प्रज्वलित करें।\n• रुद्राक्ष: ७ मुखी अथवा ८ मुखी रुद्राक्ष धारण करना सर्वोत्तम रहेगा।',
-                        style: isGujarati
-                            ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5)
-                            : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, color: Colors.white.withAlpha(220), height: 1.5),
-                      ),
-                    ],
-                  ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // 2. Sacred Vedic Remedies
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(50),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.gold.withAlpha(70)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.spa_rounded, color: AppColors.goldLight, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isGujarati ? 'વૈદિક મંત્ર, રુદ્રાક્ષ & ગ્રહ રત્ન ઉપાય' : 'वैदिक मन्त्र, रुद्राक्ष एवं ग्रह रत्न उपाय',
+                                    style: GoogleFonts.cinzel(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.goldLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                isGujarati
+                                    ? '${doshaAnalysis.vedicMantraGu}\n\n${doshaAnalysis.upayGu}\n\n${doshaAnalysis.rudrakshaGu}\n\n${doshaAnalysis.gemstoneGu}\n\n${doshaAnalysis.powerfulGemstoneGu}\n\n${doshaAnalysis.avoidGemstoneGu}'
+                                    : '${doshaAnalysis.vedicMantraHi}\n\n${doshaAnalysis.upayHi}\n\n${doshaAnalysis.rudrakshaHi}\n\n${doshaAnalysis.gemstoneHi}\n\n${doshaAnalysis.powerfulGemstoneHi}\n\n${doshaAnalysis.avoidGemstoneHi}',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(fontSize: 11.5, color: Colors.white.withAlpha(225), height: 1.55)
+                                    : GoogleFonts.notoSerifDevanagari(fontSize: 11.5, color: Colors.white.withAlpha(225), height: 1.55),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ] else
                 ElevatedButton.icon(
@@ -1048,13 +1145,185 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
     );
   }
 
+  Widget _buildYogaCard(AstrologicalYogaItem yoga, bool isDark, bool isGujarati) {
+    final title = isGujarati ? yoga.nameGu : yoga.nameHi;
+    final desc = isGujarati ? yoga.descriptionGu : yoga.descriptionHi;
+    final impact = isGujarati ? yoga.impactGu : yoga.impactHi;
+    final remedy = isGujarati ? yoga.remedyGu : yoga.remedyHi;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: yoga.isAuspicious
+            ? AppColors.saffronPrimary.withAlpha(isDark ? 30 : 15)
+            : Colors.orange.withAlpha(isDark ? 25 : 12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: yoga.isAuspicious ? AppColors.gold.withAlpha(100) : Colors.orange.withAlpha(100),
+          width: 1.1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                yoga.isAuspicious ? Icons.verified_rounded : Icons.info_outline_rounded,
+                color: yoga.isAuspicious ? AppColors.saffronPrimary : Colors.orangeAccent,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? (yoga.isAuspicious ? AppColors.goldLight : Colors.orangeAccent) : AppColors.textPrimaryLight,
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? (yoga.isAuspicious ? AppColors.goldLight : Colors.orangeAccent) : AppColors.textPrimaryLight,
+                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      desc,
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 12.5,
+                              height: 1.45,
+                              color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 12.5,
+                              height: 1.45,
+                              color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (impact.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(isDark ? 60 : 15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    yoga.isAuspicious ? Icons.auto_awesome : Icons.shield_outlined,
+                    size: 14,
+                    color: yoga.isAuspicious ? AppColors.goldLight : Colors.orange,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${isGujarati ? 'પ્રભાવ:' : 'प्रभाव:'} $impact',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : AppColors.textPrimaryLight,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (remedy.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.saffronPrimary.withAlpha(20),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.saffronPrimary.withAlpha(60)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.spa_rounded, size: 14, color: AppColors.saffronPrimary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${isGujarati ? 'શાંતિ ઉપાય:' : 'उपाय:'} $remedy',
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 11.5,
+                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                              fontWeight: FontWeight.w600,
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 11.5,
+                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // --- TAB 5: Graha Sthiti & Avakahada ---
   Widget _buildPlanetsTab(bool isDark, bool isGujarati) {
     final k = widget.kundali;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Planetary Table
+        // Interactive Tap Hint Banner
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [const Color(0xFF381D10), const Color(0xFF241010)]
+                  : [const Color(0xFFFFF3E0), const Color(0xFFFDE8D0)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.saffronPrimary.withAlpha(90)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.touch_app_rounded, color: AppColors.saffronPrimary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isGujarati
+                      ? 'કોઈપણ ગ્રહ પર ટેપ કરી વિગતવાર ગ્રહ ફળ, રાશિ પ્રભાવ, ભાવ ફળ અને વૈદિક મંત્ર જુઓ.'
+                      : 'किसी भी ग्रह पर टैप करके विस्तृत ग्रह फल, राशि प्रभाव, भाव फल एवं वैदिक मंत्र देखें।',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Planetary Cards / Table
         Container(
           decoration: BoxDecoration(
             color: isDark ? AppColors.cardDark : AppColors.cardLight,
@@ -1063,91 +1332,204 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
               color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
             ),
           ),
-          child: DataTable(
-            columnSpacing: 16,
-            horizontalMargin: 12,
-            columns: [
-              DataColumn(
-                label: Text(
-                  isGujarati ? 'ગ્રહ' : 'ग्रह',
-                  style: isGujarati
-                      ? GoogleFonts.notoSerifGujarati(fontWeight: FontWeight.bold, fontSize: 13)
-                      : GoogleFonts.notoSerifDevanagari(fontWeight: FontWeight.bold, fontSize: 13),
+          child: Column(
+            children: [
+              // Header Row
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.black.withAlpha(60) : Colors.grey.withAlpha(20),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        isGujarati ? 'ગ્રહ / અંશ' : 'ग्रह / अंश',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        isGujarati ? 'રાશિ / ભાવ' : 'राशि / भाव',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        isGujarati ? 'સ્થિતિ / ફળ' : 'स्थिति / फल',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              DataColumn(
-                label: Text(
-                  isGujarati ? 'રાશિ' : 'राशि',
-                  style: isGujarati
-                      ? GoogleFonts.notoSerifGujarati(fontWeight: FontWeight.bold, fontSize: 13)
-                      : GoogleFonts.notoSerifDevanagari(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  isGujarati ? 'અંશ' : 'अंश',
-                  style: isGujarati
-                      ? GoogleFonts.notoSerifGujarati(fontWeight: FontWeight.bold, fontSize: 13)
-                      : GoogleFonts.notoSerifDevanagari(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-              DataColumn(
-                label: Text(
-                  isGujarati ? 'ભાવ' : 'भाव',
-                  style: isGujarati
-                      ? GoogleFonts.notoSerifGujarati(fontWeight: FontWeight.bold, fontSize: 13)
-                      : GoogleFonts.notoSerifDevanagari(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-            ],
-            rows: k.planets.map((p) {
-              final rashiInfo = RashiData.getRashiById(p.rashiId);
-              final rashiName = isGujarati ? rashiInfo.gujaratiName : rashiInfo.hindiName;
-              final planetName = isGujarati ? p.nameGu : p.nameHi;
 
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          planetName,
-                          style: isGujarati
-                              ? GoogleFonts.notoSerifGujarati(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                                )
-                              : GoogleFonts.notoSerifDevanagari(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                                ),
+              // Rows
+              ...k.planets.map((p) {
+                final rashiInfo = RashiData.getRashiById(p.rashiId);
+                final rashiName = isGujarati ? rashiInfo.gujaratiName : rashiInfo.hindiName;
+                final planetName = isGujarati ? p.nameGu : p.nameHi;
+                final dignity = KundaliCalculator.getPlanetDignity(p);
+                final dignityLabel = isGujarati ? (dignity['labelGu'] as String) : (dignity['labelHi'] as String);
+                final dignityType = dignity['dignity'] as String;
+
+                Color dignityColor;
+                if (dignityType == 'Exalted') {
+                  dignityColor = Colors.amber.shade700;
+                } else if (dignityType == 'Own') {
+                  dignityColor = Colors.green.shade600;
+                } else if (dignityType == 'Friend') {
+                  dignityColor = Colors.teal.shade600;
+                } else if (dignityType == 'Neutral') {
+                  dignityColor = Colors.blueGrey;
+                } else if (dignityType == 'Enemy') {
+                  dignityColor = Colors.deepOrange;
+                } else {
+                  dignityColor = Colors.redAccent;
+                }
+
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showGrahaFalModal(p),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isDark ? AppColors.cardBorderDark.withAlpha(50) : AppColors.cardBorderLight,
+                            width: 0.8,
+                          ),
                         ),
-                        if (p.isRetrograde)
-                          Text(
-                            ' (R)',
-                            style: GoogleFonts.outfit(
-                              color: AppColors.saffronPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      planetName,
+                                      style: isGujarati
+                                          ? GoogleFonts.notoSerifGujarati(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                            )
+                                          : GoogleFonts.notoSerifDevanagari(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                            ),
+                                    ),
+                                    if (p.isRetrograde) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.saffronPrimary.withAlpha(40),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          'R',
+                                          style: GoogleFonts.outfit(
+                                            color: AppColors.saffronPrimary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 9,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  p.formattedDegree,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.white60 : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                      ],
+                          Expanded(
+                            flex: 4,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  rashiName,
+                                  style: isGujarati
+                                      ? GoogleFonts.notoSerifGujarati(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                        )
+                                      : GoogleFonts.notoSerifDevanagari(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                        ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${isGujarati ? 'ભાવ:' : 'भाव:'} ${p.houseNumber}',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.white60 : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                  decoration: BoxDecoration(
+                                    color: dignityColor.withAlpha(isDark ? 40 : 25),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: dignityColor.withAlpha(120), width: 0.8),
+                                  ),
+                                  child: Text(
+                                    dignityLabel.split(' ').first,
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: dignityColor,
+                                          )
+                                        : GoogleFonts.notoSerifDevanagari(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: dignityColor,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey.shade500),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  DataCell(Text(
-                    rashiName,
-                    style: isGujarati
-                        ? GoogleFonts.notoSerifGujarati(fontSize: 13)
-                        : GoogleFonts.notoSerifDevanagari(fontSize: 13),
-                  )),
-                  DataCell(Text(p.formattedDegree, style: GoogleFonts.outfit(fontSize: 12.5))),
-                  DataCell(Text('${p.houseNumber}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13))),
-                ],
-              );
-            }).toList(),
+                );
+              }),
+            ],
           ),
         ),
 
@@ -1181,6 +1563,11 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
   Widget _buildDashaTab(bool isDark, bool isGujarati) {
     final k = widget.kundali;
     final pred = k.lifePrediction;
+    final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+      planets: k.planets,
+      moonRashiId: k.moonRashiId,
+      lagnaRashiId: k.lagnaRashiId,
+    );
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1249,6 +1636,81 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isGujarati ? 'ધારણ રત્ન:' : 'धारण रत्न:',
+                    style: isGujarati
+                        ? GoogleFonts.notoSerifGujarati(color: AppColors.goldLight, fontSize: 13)
+                        : GoogleFonts.notoSerifDevanagari(color: AppColors.goldLight, fontSize: 13),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isGujarati ? k.luckyGemstoneGu : k.luckyGemstoneHi,
+                      textAlign: TextAlign.end,
+                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5),
+                    ),
+                  ),
+                ],
+              ),
+              if (doshaAnalysis.powerfulGemstoneGu.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isGujarati ? 'પાવરફુલ રત્ન:' : 'पावरफुल रत्न:',
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(color: AppColors.goldLight, fontSize: 13)
+                          : GoogleFonts.notoSerifDevanagari(color: AppColors.goldLight, fontSize: 13),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isGujarati
+                            ? doshaAnalysis.powerfulGemstoneGu.replaceAll('• સૌથી પાવરફુલ કારક રત્ન: ', '')
+                            : doshaAnalysis.powerfulGemstoneHi.replaceAll('• सर्वाधिक शक्तिशाली कारक रत्न: ', ''),
+                        textAlign: TextAlign.end,
+                        style: isGujarati
+                            ? GoogleFonts.notoSerifGujarati(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5)
+                            : GoogleFonts.notoSerifDevanagari(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (doshaAnalysis.avoidGemstoneGu.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isGujarati ? 'વર્જ્ય રત્ન:' : 'वर्ज्य रत्न:',
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(color: const Color(0xFFFFB4AB), fontSize: 12.5)
+                          : GoogleFonts.notoSerifDevanagari(color: const Color(0xFFFFB4AB), fontSize: 12.5),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isGujarati
+                            ? doshaAnalysis.avoidGemstoneGu.replaceAll('• વર્જ્ય/નિષેધ રત્ન: ', '')
+                            : doshaAnalysis.avoidGemstoneHi.replaceAll('• वर्ज्य/निषेध रत्न: ', ''),
+                        textAlign: TextAlign.end,
+                        style: isGujarati
+                            ? GoogleFonts.notoSerifGujarati(color: const Color(0xFFFFDAD6), fontSize: 11)
+                            : GoogleFonts.notoSerifDevanagari(color: const Color(0xFFFFDAD6), fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1297,20 +1759,33 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
           ),
         ),
 
-        // Section Title: Vimshottari Dasha Timeline
-        Text(
-          isGujarati ? '૧૨૦ વર્ષ વિંશોત્તરી મહાદશા ચક્ર' : '१२० वर्ष विंशोत्तरी महादशा चक्र',
-          style: isGujarati
-              ? GoogleFonts.notoSerifGujarati(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                )
-              : GoogleFonts.notoSerifDevanagari(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
-                ),
+        // Section Title: Vimshottari Dasha Timeline with Antardasha
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              isGujarati ? '૧૨૦ વર્ષ વિંશોત્તરી મહાદશા & દશાંતર' : '१२० वर्ष विंशोत्तरी महादशा एवं दशांतर',
+              style: isGujarati
+                  ? GoogleFonts.notoSerifGujarati(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                    )
+                  : GoogleFonts.notoSerifDevanagari(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                    ),
+            ),
+            Text(
+              isGujarati ? 'ટેપ કરી ફળ જુઓ' : 'फल देखें',
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                color: AppColors.saffronPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
 
@@ -1320,15 +1795,33 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
           final dashaName = isGujarati ? d.planetNameGu : d.planetNameHi;
           final startFmt = DateFormat('dd/MM/yyyy').format(d.startDate);
           final endFmt = DateFormat('dd/MM/yyyy').format(d.endDate);
+          final isExpanded = _expandedDashaIndices.contains(index);
+
+          // Get 9 Antardashas (from model or on-demand calculator)
+          final antardashas = d.antardashas.isNotEmpty
+              ? d.antardashas
+              : KundaliCalculator.getAntardashasForDasha(d.planetNameGu, d.startDate, d.endDate);
+
+          // Find associated planet in planets list
+          final planet = k.planets.firstWhere(
+            (p) => p.nameGu == d.planetNameGu || p.nameHi == d.planetNameHi,
+            orElse: () => k.planets.first,
+          );
+
+          // Find associated yogas for this dasha lord
+          final associatedYogas = pred.yogas.where((y) =>
+              y.associatedPlanets.any((pName) =>
+                  pName == d.planetNameGu ||
+                  pName == d.planetNameHi ||
+                  pName == planet.nameEn)).toList();
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: d.isCurrent
                   ? (isDark ? const Color(0xFF381D10) : const Color(0xFFFFF3E0))
                   : (isDark ? AppColors.cardDark : AppColors.cardLight),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: d.isCurrent
                     ? AppColors.saffronPrimary
@@ -1336,90 +1829,1119 @@ class _KundaliPreviewScreenState extends State<KundaliPreviewScreen> with Single
                 width: d.isCurrent ? 1.8 : 1.0,
               ),
             ),
-            child: Row(
+            child: Column(
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: d.isCurrent ? AppColors.saffronPrimary : Colors.grey.withAlpha(40),
-                  ),
-                  child: Text(
-                    '${index + 1}',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: d.isCurrent ? Colors.white : Colors.grey,
+                // Mahadasha Header Card
+                InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    setState(() {
+                      if (isExpanded) {
+                        _expandedDashaIndices.remove(index);
+                      } else {
+                        _expandedDashaIndices.add(index);
+                      }
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: d.isCurrent ? AppColors.saffronPrimary : Colors.grey.withAlpha(40),
+                              ),
+                              child: Text(
+                                '${index + 1}',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  color: d.isCurrent ? Colors.white : Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '$dashaName ${isGujarati ? 'મહાદશા' : 'महादशा'}',
+                                        style: isGujarati
+                                            ? GoogleFonts.notoSerifGujarati(
+                                                fontSize: 14.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: d.isCurrent
+                                                    ? AppColors.saffronPrimary
+                                                    : (isDark ? Colors.white : AppColors.textPrimaryLight),
+                                              )
+                                            : GoogleFonts.notoSerifDevanagari(
+                                                fontSize: 14.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: d.isCurrent
+                                                    ? AppColors.saffronPrimary
+                                                    : (isDark ? Colors.white : AppColors.textPrimaryLight),
+                                              ),
+                                      ),
+                                      if (d.isCurrent) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.saffronPrimary,
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            isGujarati ? 'ચાલુ છે' : 'સક્રિય',
+                                            style: isGujarati
+                                                ? GoogleFonts.notoSerifGujarati(
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  )
+                                                : GoogleFonts.notoSerifDevanagari(
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$startFmt — $endFmt (${d.durationYears} ${isGujarati ? 'વર્ષ' : 'वर्ष'})',
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 12,
+                                            color: isDark ? Colors.white70 : Colors.grey.shade700,
+                                          )
+                                        : GoogleFonts.notoSerifDevanagari(
+                                            fontSize: 12,
+                                            color: isDark ? Colors.white70 : Colors.grey.shade700,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.info_outline_rounded,
+                                color: AppColors.goldLight,
+                                size: 20,
+                              ),
+                              tooltip: isGujarati ? 'ગ્રહ ફળ & મંત્ર' : 'ग्रह फल एवं मंत्र',
+                              onPressed: () => _showGrahaFalModal(planet, dashaItem: d),
+                            ),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                              color: isExpanded ? AppColors.saffronPrimary : Colors.grey.shade500,
+                            ),
+                          ],
+                        ),
+
+                        // Yoga Badges on Mahadasha card
+                        if (associatedYogas.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: associatedYogas.map((y) {
+                              final yogaName = isGujarati ? y.nameGu : y.nameHi;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: y.isAuspicious
+                                      ? AppColors.gold.withAlpha(isDark ? 40 : 25)
+                                      : Colors.orange.withAlpha(isDark ? 40 : 25),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: y.isAuspicious ? AppColors.gold.withAlpha(120) : Colors.orange.withAlpha(120),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      y.isAuspicious ? Icons.stars_rounded : Icons.warning_amber_rounded,
+                                      size: 11,
+                                      color: y.isAuspicious ? AppColors.goldLight : Colors.orangeAccent,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      yogaName,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: y.isAuspicious ? (isDark ? AppColors.goldLight : AppColors.maroonPrimary) : Colors.orangeAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            dashaName,
-                            style: isGujarati
-                                ? GoogleFonts.notoSerifGujarati(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: d.isCurrent
-                                        ? AppColors.saffronPrimary
-                                        : (isDark ? Colors.white : AppColors.textPrimaryLight),
-                                  )
-                                : GoogleFonts.notoSerifDevanagari(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: d.isCurrent
-                                        ? AppColors.saffronPrimary
-                                        : (isDark ? Colors.white : AppColors.textPrimaryLight),
-                                  ),
-                          ),
-                          if (d.isCurrent) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.saffronPrimary,
-                                borderRadius: BorderRadius.circular(6),
+
+                // Expanded Antardasha (દશાંતર) Cycle Breakdown
+                if (isExpanded && antardashas.isNotEmpty) ...[
+                  const Divider(height: 1, thickness: 0.8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    color: isDark ? Colors.black.withAlpha(40) : Colors.grey.withAlpha(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isGujarati ? 'અંતર્દશા (દશાંતર) સાયકલ:' : 'अंतर्दशा (दशांतर) विवरण:',
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
                               ),
-                              child: Text(
-                                isGujarati ? 'ચાલુ છે' : 'सक्रिय',
-                                style: isGujarati
-                                    ? GoogleFonts.notoSerifGujarati(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      )
-                                    : GoogleFonts.notoSerifDevanagari(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                            ),
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: () => _showGrahaFalModal(planet, dashaItem: d),
+                              icon: const Icon(Icons.menu_book_rounded, size: 14, color: AppColors.saffronPrimary),
+                              label: Text(
+                                isGujarati ? 'સંપૂર્ણ ફળાદેશ' : 'सम्पूर्ण फलादेश',
+                                style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.saffronPrimary),
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '$startFmt — $endFmt (${d.durationYears} ${isGujarati ? 'વર્ષ' : 'वर्ष'})',
-                        style: isGujarati
-                            ? GoogleFonts.notoSerifGujarati(fontSize: 12, color: isDark ? Colors.white70 : Colors.grey.shade700)
-                            : GoogleFonts.notoSerifDevanagari(fontSize: 12, color: isDark ? Colors.white70 : Colors.grey.shade700),
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 8),
+                        ...antardashas.map((antar) {
+                          final aStart = DateFormat('dd/MM/yy').format(antar.startDate);
+                          final aEnd = DateFormat('dd/MM/yy').format(antar.endDate);
+                          final aName = isGujarati ? antar.planetNameGu : antar.planetNameHi;
+                          final aFal = isGujarati ? antar.antardashaFalGu : antar.antardashaFalHi;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: antar.isCurrent
+                                  ? AppColors.saffronPrimary.withAlpha(isDark ? 40 : 20)
+                                  : (isDark ? AppColors.cardDark : Colors.white),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: antar.isCurrent
+                                    ? AppColors.saffronPrimary
+                                    : (isDark ? AppColors.cardBorderDark.withAlpha(60) : Colors.grey.withAlpha(60)),
+                                width: antar.isCurrent ? 1.2 : 0.6,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            aName,
+                                            style: GoogleFonts.outfit(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                              color: antar.isCurrent
+                                                  ? AppColors.saffronPrimary
+                                                  : (isDark ? Colors.white : AppColors.textPrimaryLight),
+                                            ),
+                                          ),
+                                          if (antar.isCurrent) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.saffronPrimary,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                isGujarati ? 'ચાલુ છે' : 'सक्रिय',
+                                                style: GoogleFonts.outfit(fontSize: 8.5, color: Colors.white, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      '$aStart — $aEnd',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 11,
+                                        color: isDark ? Colors.white60 : Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (aFal.isNotEmpty) ...[
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    aFal,
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 11,
+                                            color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                                            height: 1.35,
+                                          )
+                                        : GoogleFonts.notoSerifDevanagari(
+                                            fontSize: 11,
+                                            color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                                            height: 1.35,
+                                          ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           );
         }),
       ],
+    );
+  }
+
+  void _showGrahaFalModal(PlanetPosition planet, {VimshottariDashaItem? dashaItem}) {
+    final langProvider = context.read<LanguageProvider>();
+    final isGujarati = langProvider.isGujarati;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final k = widget.kundali;
+
+    final rashiInfo = RashiData.getRashiById(planet.rashiId);
+    final rashiName = isGujarati ? rashiInfo.gujaratiName : rashiInfo.hindiName;
+    final planetName = isGujarati ? planet.nameGu : planet.nameHi;
+    final dignity = KundaliCalculator.getPlanetDignity(planet);
+    final dignityLabel = isGujarati ? (dignity['labelGu'] as String) : (dignity['labelHi'] as String);
+    final dignityType = dignity['dignity'] as String;
+    final grahaFal = KundaliCalculator.getGrahaFal(planet, k.lagnaRashiId);
+    final lordships = KundaliCalculator.getPlanetLordships(planet.id, k.lagnaRashiId);
+    final spiritualInfo = KundaliCalculator.getPlanetSpiritualInfo(planet.id);
+
+    // Find dasha item if not passed
+    final matchingDasha = dashaItem ??
+        k.dashas.firstWhere(
+          (d) => d.planetNameGu == planet.nameGu || d.planetNameHi == planet.nameHi,
+          orElse: () => k.dashas.first,
+        );
+
+    Color dignityColor;
+    if (dignityType == 'Exalted') {
+      dignityColor = Colors.amber.shade700;
+    } else if (dignityType == 'Own') {
+      dignityColor = Colors.green.shade600;
+    } else if (dignityType == 'Friend') {
+      dignityColor = Colors.teal.shade600;
+    } else if (dignityType == 'Neutral') {
+      dignityColor = Colors.blueGrey;
+    } else if (dignityType == 'Enemy') {
+      dignityColor = Colors.deepOrange;
+    } else {
+      dignityColor = Colors.redAccent;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.88,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.cardDark : AppColors.cardLight,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withAlpha(100),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // Header Card with Planet & Dignity
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.saffronGradient,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.saffronPrimary.withAlpha(60),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        isGujarati ? planet.shortGu : planet.shortHi,
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                '$planetName ${isGujarati ? 'વિશ્લેષણ' : 'विश्लेषण'}',
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                      )
+                                    : GoogleFonts.notoSerifDevanagari(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                      ),
+                              ),
+                              if (planet.isRetrograde) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.saffronPrimary.withAlpha(40),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'વક્રી (Retro)',
+                                    style: GoogleFonts.outfit(
+                                      color: AppColors.saffronPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '$rashiName (${planet.formattedDegree}) • ${isGujarati ? '${planet.houseNumber} મો ભાવ' : '${planet.houseNumber} वां भाव'}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.5,
+                              color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: dignityColor.withAlpha(isDark ? 40 : 25),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: dignityColor.withAlpha(120), width: 1.2),
+                      ),
+                      child: Text(
+                        dignityLabel,
+                        style: isGujarati
+                            ? GoogleFonts.notoSerifGujarati(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: dignityColor,
+                              )
+                            : GoogleFonts.notoSerifDevanagari(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: dignityColor,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(height: 1, thickness: 0.8),
+
+              // Scrollable Details
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    // Lordships Banner
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF381D10) : const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.saffronPrimary.withAlpha(isDark ? 80 : 120),
+                          width: 1.1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.account_balance_rounded, color: AppColors.saffronPrimary, size: 22),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isGujarati ? 'ભાવ સ્વામીત્વ (House Lordship):' : 'भाव स्वामित्व (House Lordship):',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white60 : Colors.grey.shade700,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  isGujarati ? (lordships['titleGu'] as String) : (lordships['titleHi'] as String),
+                                  style: isGujarati
+                                      ? GoogleFonts.notoSerifGujarati(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                        )
+                                      : GoogleFonts.notoSerifDevanagari(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Section 1: Rashi-wise & House-wise Graha Fal (કઈ રાશિ અને ભાવમાંથી શું ફળ આપશે)
+                    _buildModalSectionCard(
+                      icon: Icons.auto_awesome_rounded,
+                      iconColor: AppColors.gold,
+                      title: isGujarati ? 'ગ્રહ ફળાદેશ (Graha Fal Analysis)' : 'ग्रह फलादेश (Graha Fal Analysis)',
+                      isDark: isDark,
+                      isGujarati: isGujarati,
+                      children: [
+                        // Rashi Fal
+                        _buildSubFalRow(
+                          label: isGujarati ? 'રાશિ સ્થિતિ પ્રભાવ:' : 'राशि स्थिति प्रभाव:',
+                          content: isGujarati ? grahaFal['rashiFalGu']! : grahaFal['rashiFalHi']!,
+                          isDark: isDark,
+                          isGujarati: isGujarati,
+                        ),
+                        const SizedBox(height: 10),
+                        // House Fal
+                        _buildSubFalRow(
+                          label: isGujarati ? 'ભાવ સ્થિતિ પ્રભાવ:' : 'भाव स्थिति प्रभाव:',
+                          content: isGujarati ? grahaFal['houseFalGu']! : grahaFal['houseFalHi']!,
+                          isDark: isDark,
+                          isGujarati: isGujarati,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Section 2: Mahadasha & Antardasha Cycle & Antardasha Fal (દશાંતર ફળાદેશ)
+                    _buildModalSectionCard(
+                      icon: Icons.timelapse_rounded,
+                      iconColor: AppColors.saffronPrimary,
+                      title: isGujarati
+                          ? '$planetName મહાદશા & દશાંતર ફળાદેશ'
+                          : '$planetName महादशा एवं दशांतर फलादेश',
+                      isDark: isDark,
+                      isGujarati: isGujarati,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: matchingDasha.isCurrent
+                                ? (isDark ? const Color(0xFF381D10) : const Color(0xFFFFF3E0))
+                                : (isDark ? Colors.black.withAlpha(50) : const Color(0xFFFBF8F4)),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: matchingDasha.isCurrent
+                                  ? AppColors.saffronPrimary
+                                  : (isDark ? AppColors.cardBorderDark : const Color(0xFFE8DCCF)),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_month_rounded,
+                                    size: 15,
+                                    color: matchingDasha.isCurrent ? AppColors.saffronPrimary : Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${DateFormat('dd/MM/yyyy').format(matchingDasha.startDate)} — ${DateFormat('dd/MM/yyyy').format(matchingDasha.endDate)}',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.5,
+                                      color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (matchingDasha.isCurrent)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.saffronPrimary,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    isGujarati ? 'ચાલુ મહાદશા' : 'સક્રિય મહાદશા',
+                                    style: GoogleFonts.outfit(fontSize: 9.5, color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ...(matchingDasha.antardashas.isNotEmpty
+                                ? matchingDasha.antardashas
+                                : KundaliCalculator.getAntardashasForDasha(
+                                    matchingDasha.planetNameGu,
+                                    matchingDasha.startDate,
+                                    matchingDasha.endDate,
+                                  ))
+                            .map((antar) {
+                          final aName = isGujarati ? antar.planetNameGu : antar.planetNameHi;
+                          final aFal = isGujarati ? antar.antardashaFalGu : antar.antardashaFalHi;
+                          final aStart = DateFormat('dd/MM/yy').format(antar.startDate);
+                          final aEnd = DateFormat('dd/MM/yy').format(antar.endDate);
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: antar.isCurrent
+                                  ? AppColors.saffronPrimary.withAlpha(isDark ? 35 : 18)
+                                  : (isDark ? Colors.black.withAlpha(40) : Colors.white),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: antar.isCurrent
+                                    ? AppColors.saffronPrimary
+                                    : (isDark ? AppColors.cardBorderDark.withAlpha(50) : Colors.grey.withAlpha(40)),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          aName,
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12.5,
+                                            color: antar.isCurrent
+                                                ? AppColors.saffronPrimary
+                                                : (isDark ? Colors.white : AppColors.textPrimaryLight),
+                                          ),
+                                        ),
+                                        if (antar.isCurrent) ...[
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.saffronPrimary,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              isGujarati ? 'ચાલુ છે' : 'सक्रिय',
+                                              style: GoogleFonts.outfit(fontSize: 8.5, color: Colors.white, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    Text(
+                                      '$aStart — $aEnd',
+                                      style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                                if (aFal.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    aFal,
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 11.5,
+                                            height: 1.4,
+                                            color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                                          )
+                                        : GoogleFonts.notoSerifDevanagari(
+                                            fontSize: 11.5,
+                                            height: 1.4,
+                                            color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
+                                          ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Section 3: Sacred Vedic Beej Mantra & Remedies
+                    _buildModalSectionCard(
+                      icon: Icons.spa_rounded,
+                      iconColor: AppColors.saffronPrimary,
+                      title: isGujarati ? 'પવિત્ર વૈદિક મંત્ર અને ઉપાય' : 'पवित्र वैदिक मंत्र एवं उपाय',
+                      isDark: isDark,
+                      isGujarati: isGujarati,
+                      children: [
+                        // Vedic Beej Mantra Plaque (High-Contrast Rich Spiritual Gradient)
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF4A1010), Color(0xFF6B1818), Color(0xFF380C0C)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.gold, width: 1.2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(50),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.auto_awesome, color: AppColors.goldLight, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        isGujarati ? 'તાંત્રિક બીજ મંત્ર' : 'तांत्रिक बीज मंत्र',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.goldLight,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      final text = isGujarati ? spiritualInfo['beejMantraGu'] as String : spiritualInfo['beejMantraHi'] as String;
+                                      Clipboard.setData(ClipboardData(text: text));
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(isGujarati ? 'મંત્ર કૉપી થયો!' : 'मंत्र कॉपी हुआ!'),
+                                          duration: const Duration(seconds: 2),
+                                          backgroundColor: AppColors.maroonPrimary,
+                                        ),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withAlpha(25),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: AppColors.goldLight.withAlpha(120), width: 0.8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.copy_rounded, color: AppColors.goldLight, size: 13),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isGujarati ? 'કૉપી કરો' : 'कॉपी करें',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.goldLight,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withAlpha(60),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppColors.gold.withAlpha(80)),
+                                ),
+                                child: Text(
+                                  isGujarati ? spiritualInfo['beejMantraGu'] as String : spiritualInfo['beejMantraHi'] as String,
+                                  textAlign: TextAlign.center,
+                                  style: isGujarati
+                                      ? GoogleFonts.notoSerifGujarati(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          height: 1.4,
+                                        )
+                                      : GoogleFonts.notoSerifDevanagari(
+                                          fontSize: 16.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          height: 1.4,
+                                        ),
+                                ),
+                              ),
+                              if (spiritualInfo['vedicMantraGu'] != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Text(
+                                      isGujarati ? 'વૈદિક મંત્ર:' : 'वैदिक मंत्र:',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.goldLight.withAlpha(200),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        isGujarati ? spiritualInfo['vedicMantraGu'] as String : spiritualInfo['vedicMantraHi'] as String,
+                                        style: isGujarati
+                                            ? GoogleFonts.notoSerifGujarati(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white70,
+                                              )
+                                            : GoogleFonts.notoSerifDevanagari(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white70,
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Deity & Gemstone (Dual Cards with Rich Contrast)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _buildMiniSpiritualBadge(
+                                icon: Icons.temple_hindu_rounded,
+                                iconColor: AppColors.saffronPrimary,
+                                label: isGujarati ? 'ઉપાસ્ય દેવ' : 'उपास्य देव',
+                                value: isGujarati ? spiritualInfo['deityGu'] as String : spiritualInfo['deityHi'] as String,
+                                isDark: isDark,
+                                isGujarati: isGujarati,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildMiniSpiritualBadge(
+                                icon: Icons.diamond_rounded,
+                                iconColor: Colors.amber.shade700,
+                                label: isGujarati ? 'શુભ રત્ન' : 'शुभ रत्न',
+                                value: isGujarati ? spiritualInfo['gemstoneGu'] as String : spiritualInfo['gemstoneHi'] as String,
+                                isDark: isDark,
+                                isGujarati: isGujarati,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Remedies (ઉપાય) Box
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF381D10) : const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.saffronPrimary.withAlpha(isDark ? 80 : 120),
+                              width: 1.1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.volunteer_activism_rounded, size: 16, color: AppColors.saffronPrimary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isGujarati ? 'જ્યોતિષીય ઉપાય & દાન:' : 'ज्योतिषीय उपाय एवं दान:',
+                                    style: isGujarati
+                                        ? GoogleFonts.notoSerifGujarati(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                          )
+                                        : GoogleFonts.notoSerifDevanagari(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                isGujarati ? spiritualInfo['remedyGu'] as String : spiritualInfo['remedyHi'] as String,
+                                style: isGujarati
+                                    ? GoogleFonts.notoSerifGujarati(
+                                        fontSize: 12.5,
+                                        height: 1.5,
+                                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                        fontWeight: FontWeight.w500,
+                                      )
+                                    : GoogleFonts.notoSerifDevanagari(
+                                        fontSize: 12.5,
+                                        height: 1.5,
+                                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildModalSectionCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required bool isDark,
+    required bool isGujarati,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+          width: 1.1,
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: isGujarati
+                      ? GoogleFonts.notoSerifGujarati(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                        )
+                      : GoogleFonts.notoSerifDevanagari(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+                        ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubFalRow({
+    required String label,
+    required String content,
+    required bool isDark,
+    required bool isGujarati,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppColors.goldLight : AppColors.maroonPrimary,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          content,
+          style: isGujarati
+              ? GoogleFonts.notoSerifGujarati(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                )
+              : GoogleFonts.notoSerifDevanagari(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniSpiritualBadge({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required bool isDark,
+    required bool isGujarati,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black.withAlpha(60) : const Color(0xFFFBF8F4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : const Color(0xFFE8DCCF),
+          width: 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: iconColor),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 11,
+                  color: isDark ? Colors.white60 : Colors.grey.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: isGujarati
+                ? GoogleFonts.notoSerifGujarati(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                    height: 1.3,
+                  )
+                : GoogleFonts.notoSerifDevanagari(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                    height: 1.3,
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

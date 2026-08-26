@@ -1005,6 +1005,11 @@ class KundaliPdfService {
         build: (pw.Context context) {
           final dosha = kundali.mangalDosha;
           final pred = kundali.lifePrediction;
+          final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+            planets: kundali.planets,
+            moonRashiId: kundali.moonRashiId,
+            lagnaRashiId: kundali.lagnaRashiId,
+          );
 
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -1114,8 +1119,8 @@ class KundaliPdfService {
                     pw.SizedBox(height: 2),
                     pw.Text(
                       isGujarati
-                          ? '• કાળસર્પ સ્થિતિ: રાહુ-કેતુ અક્ષમાં ગ્રહોની સ્થિતિ અનુકૂળ છે. આર્થિક ઉતાર-ચઢાવથી બચવા શિવ આરાધના શ્રેષ્ઠ રહેશે.\n• શનિ સાડાસાતી: પરિશ્રમનું ઉત્તમ ફળ મળશે, ધીરજ અને સદાચાર જાળવવો.\n• વૈદિક મંત્ર: "ૐ ત્ર્યમ્બકં યજામહે સુગન્ધિં પુષ્ટિવર્ધનમ્" (દરરોજ ૧૧ વાર જાપ કરવો) | રુદ્રાક્ષ: ૭ અથવા ૮ મુખી'
-                          : '• कालसर्प स्थिति: राहु-केतु अक्ष में ग्रहों की स्थिति अनुकूल है। आर्थिक स्थिरता हेतु शिव आराधना उत्तम रहेगी।\n• शनि साढ़ेसाती: कर्मनिष्ठा का शुभ फल मिलेगा, धैर्य एवं सदाचार बनाए रखें।\n• वैदिक मंत्र: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्" (नित्य ११ बार जप) | रुद्राक्ष: ७ अथवा ८ मुखी',
+                          ? '• કાળસર્પ સ્થિતિ: [${doshaAnalysis.kaalSarpNameGu}] ${doshaAnalysis.kaalSarpDescGu}\n• શનિ સાડાસાતી: [${doshaAnalysis.shaniStatusGu}] ${doshaAnalysis.shaniDescGu}\n• ${doshaAnalysis.vedicMantraGu}\n• ${doshaAnalysis.rudrakshaGu.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneGu.replaceAll('• ', '')}\n${doshaAnalysis.powerfulGemstoneGu}\n${doshaAnalysis.avoidGemstoneGu}'
+                          : '• कालसर्प स्थिति: [${doshaAnalysis.kaalSarpNameHi}] ${doshaAnalysis.kaalSarpDescHi}\n• शनि साढ़ेसाती: [${doshaAnalysis.shaniStatusHi}] ${doshaAnalysis.shaniDescHi}\n• ${doshaAnalysis.vedicMantraHi}\n• ${doshaAnalysis.rudrakshaHi.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneHi.replaceAll('• ', '')}\n${doshaAnalysis.powerfulGemstoneHi}\n${doshaAnalysis.avoidGemstoneHi}',
                       style: pw.TextStyle(font: fontRegular, fontSize: 7.2, color: darkBg),
                     ),
                   ],

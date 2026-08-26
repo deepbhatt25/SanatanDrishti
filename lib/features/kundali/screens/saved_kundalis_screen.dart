@@ -268,34 +268,73 @@ class SavedKundalisScreen extends StatelessWidget {
       ),
       body: savedList.isEmpty
           ? Center(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.folder_open_rounded,
-                      size: 64,
-                      color: isDark ? AppColors.goldLight.withAlpha(120) : AppColors.maroonPrimary.withAlpha(120),
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: isDark
+                            ? const LinearGradient(
+                                colors: [Color(0xFF381500), Color(0xFF5A2200)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : const LinearGradient(
+                                colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        border: Border.all(color: AppColors.gold, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.gold.withAlpha(isDark ? 60 : 40),
+                            blurRadius: 18,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.folder_open_rounded,
+                          size: 44,
+                          color: AppColors.saffronPrimary,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Text(
                       AppStrings.noSavedKundalis(currentLang),
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                      ),
+                      style: isGujarati
+                          ? GoogleFonts.notoSerifGujarati(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                            )
+                          : GoogleFonts.notoSerifDevanagari(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                            ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       isGujarati
-                          ? 'નવી જન્મ કુંડળી બનાવીને અહીં સાચવો'
-                          : 'नई जन्म कुंडली बनाकर यहां सहेजें',
-                      style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey),
+                          ? 'તમારી અથવા પરિવારના સભ્યોની જન્મકુંડળી બનાવીને ભવિષ્ય માટે અહીં સાચવી રાખો.'
+                          : 'अपनी अथवा परिवार के सदस्यों की जन्म कुंडली बनाकर भविष्य के लिए यहां सहेजें।',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : const Color(0xFF666666),
+                        height: 1.4,
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.pushReplacement(
@@ -303,13 +342,17 @@ class SavedKundalisScreen extends StatelessWidget {
                           MaterialPageRoute(builder: (_) => const CreateKundaliScreen()),
                         );
                       },
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(AppStrings.createKundali(currentLang)),
+                      icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+                      label: Text(
+                        AppStrings.createKundali(currentLang),
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.saffronPrimary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                     ),
                   ],
@@ -317,137 +360,11 @@ class SavedKundalisScreen extends StatelessWidget {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
               itemCount: savedList.length,
               itemBuilder: (context, index) {
                 final k = savedList[index];
-                final lagnaInfo = RashiData.getRashiById(k.lagnaRashiId);
-                final moonInfo = RashiData.getRashiById(k.moonRashiId);
-                final lagnaName = isGujarati ? lagnaInfo.gujaratiName : lagnaInfo.hindiName;
-                final moonName = isGujarati ? moonInfo.gujaratiName : moonInfo.hindiName;
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(isDark ? 40 : 10),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    leading: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: isDark ? AppColors.maroonGradient : AppColors.headerGradientLight,
-                        border: Border.all(color: AppColors.goldLight, width: 1.2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          k.profile.name.isNotEmpty ? k.profile.name[0] : 'ૐ',
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    title: Text(
-                      k.profile.name,
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 2),
-                        Text(
-                          '${DateFormat('dd MMM yyyy').format(k.profile.dateOfBirth)} • ${k.profile.formattedTime} • ${k.profile.cityName}',
-                          style: GoogleFonts.outfit(fontSize: 11.5, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${isGujarati ? 'લગ્ન' : 'लग्न'}: $lagnaName | ${isGujarati ? 'રાશિ' : 'राशि'}: $moonName',
-                          style: GoogleFonts.outfit(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.goldLight : AppColors.saffronDark,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Builder(
-                          builder: (btnCtx) => IconButton(
-                            icon: const Icon(Icons.share_rounded, color: AppColors.goldLight, size: 20),
-                            tooltip: isGujarati ? 'કુંડળી શેર કરો' : 'कुंडली शेयर करें',
-                            onPressed: () => _shareKundali(btnCtx, k, isGujarati),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.goldLight, size: 22),
-                          tooltip: isGujarati ? 'PDF ડાઉનલોડ કરો' : 'PDF डाउनलोड करें',
-                          onPressed: () => _promptDownloadPdf(context, k, isGujarati),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
-                          tooltip: 'Delete',
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(AppStrings.deleteConfirm(currentLang)),
-                                content: Text(
-                                  isGujarati
-                                      ? '${k.profile.name} ની કુંડળી કાઢી નાખવી છે?'
-                                      : 'क्या आप ${k.profile.name} की कुंडली हटाना चाहते हैं?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: Text(isGujarati ? 'રદ કરો' : 'रद्द करें'),
-                                  ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                    onPressed: () {
-                                      kundaliProvider.deleteKundali(k.profile.id);
-                                      Navigator.pop(ctx);
-                                    },
-                                    child: Text(isGujarati ? 'કાઢી નાખો' : 'हटाएं', style: const TextStyle(color: Colors.white)),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => KundaliPreviewScreen(kundali: k),
-                        ),
-                      );
-                    },
-                  ),
-                );
+                return _buildKundaliCard(context, k, isDark, isGujarati, currentLang, kundaliProvider);
               },
             ),
       bottomNavigationBar: const SafeArea(
@@ -459,6 +376,7 @@ class SavedKundalisScreen extends StatelessWidget {
         heroTag: 'saved_create_kundali_fab',
         backgroundColor: AppColors.saffronPrimary,
         foregroundColor: Colors.white,
+        elevation: 5,
         icon: const Icon(Icons.add_rounded),
         label: Text(
           AppStrings.createKundali(currentLang),
@@ -470,6 +388,434 @@ class SavedKundalisScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const CreateKundaliScreen()),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildKundaliCard(
+    BuildContext context,
+    KundaliResult k,
+    bool isDark,
+    bool isGujarati,
+    AppLanguage currentLang,
+    KundaliProvider kundaliProvider,
+  ) {
+    final lagnaInfo = RashiData.getRashiById(k.lagnaRashiId);
+    final moonInfo = RashiData.getRashiById(k.moonRashiId);
+    final lagnaName = isGujarati ? lagnaInfo.gujaratiName : lagnaInfo.hindiName;
+    final moonName = isGujarati ? moonInfo.gujaratiName : moonInfo.hindiName;
+    final nakshatraName = isGujarati ? k.nakshatraGu : k.nakshatraHi;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E140F) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? AppColors.gold.withAlpha(60) : const Color(0xFFE8D7C3),
+          width: 1.3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(isDark ? 60 : 12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => KundaliPreviewScreen(kundali: k),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Profile Header Row
+                Row(
+                  children: [
+                    // Avatar with sacred gold border
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: isDark
+                            ? const LinearGradient(
+                                colors: [Color(0xFF7A1C1C), Color(0xFF4A1010)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : const LinearGradient(
+                                colors: [Color(0xFFE65100), Color(0xFFBF360C)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        border: Border.all(color: AppColors.gold, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.gold.withAlpha(50),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          k.profile.name.trim().isNotEmpty ? k.profile.name.trim()[0].toUpperCase() : 'ૐ',
+                          style: GoogleFonts.outfit(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Name and Gender/Profile type
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            k.profile.name,
+                            style: GoogleFonts.outfit(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF212121),
+                              letterSpacing: 0.2,
+                              height: 1.25,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: k.profile.gender == Gender.male
+                                  ? (isDark ? const Color(0xFF102A45) : const Color(0xFFE3F2FD))
+                                  : (isDark ? const Color(0xFF381424) : const Color(0xFFFCE4EC)),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: k.profile.gender == Gender.male
+                                    ? const Color(0xFF64B5F6).withAlpha(100)
+                                    : const Color(0xFFF06292).withAlpha(100),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  k.profile.gender == Gender.male ? Icons.man_rounded : Icons.woman_rounded,
+                                  size: 15,
+                                  color: k.profile.gender == Gender.male
+                                      ? (isDark ? const Color(0xFF90CAF9) : const Color(0xFF1976D2))
+                                      : (isDark ? const Color(0xFFF48FB1) : const Color(0xFFC2185B)),
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  k.profile.gender == Gender.male
+                                      ? (isGujarati ? 'પુરુષ' : 'पुरुष')
+                                      : (isGujarati ? 'સ્ત્રી' : 'स्त्री'),
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: k.profile.gender == Gender.male
+                                        ? (isDark ? const Color(0xFF90CAF9) : const Color(0xFF1976D2))
+                                        : (isDark ? const Color(0xFFF48FB1) : const Color(0xFFC2185B)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Delete Button
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                      tooltip: isGujarati ? 'કુંડળી કાઢી નાખો' : 'कुंडली हटाएं',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.red.withAlpha(isDark ? 25 : 15),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                            title: Row(
+                              children: [
+                                const Icon(Icons.delete_forever_rounded, color: Colors.redAccent),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppStrings.deleteConfirm(currentLang),
+                                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              isGujarati
+                                  ? '${k.profile.name} ની કુંડળી કાયમ માટે કાઢી નાખવી છે?'
+                                  : 'क्या आप ${k.profile.name} की कुंडली हमेशा के लिए हटाना चाहते हैं?',
+                              style: GoogleFonts.outfit(fontSize: 13.5),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text(isGujarati ? 'રદ કરો' : 'रद्द करें'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onPressed: () {
+                                  kundaliProvider.deleteKundali(k.profile.id);
+                                  Navigator.pop(ctx);
+                                },
+                                child: Text(isGujarati ? 'કાઢી નાખો' : 'हटाएं', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // 2. Birth Metadata Bar
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black.withAlpha(80) : const Color(0xFFF9F6F0),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withAlpha(15) : const Color(0xFFEBE5DB),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.saffronPrimary),
+                      const SizedBox(width: 4),
+                      Text(
+                        DateFormat('dd MMM yyyy').format(k.profile.dateOfBirth),
+                        style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : const Color(0xFF444444)),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.access_time_rounded, size: 13, color: AppColors.saffronPrimary),
+                      const SizedBox(width: 4),
+                      Text(
+                        k.profile.formattedTime,
+                        style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : const Color(0xFF444444)),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.location_on_rounded, size: 13, color: AppColors.saffronPrimary),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          k.profile.cityName,
+                          style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : const Color(0xFF444444)),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // 3. Astrological Highlights Row (Pills)
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _buildAstroBadge(
+                      icon: Icons.flare_rounded,
+                      label: '${isGujarati ? 'લગ્ન' : 'लग्न'}: $lagnaName',
+                      bgColor: isDark ? const Color(0xFF38230D) : const Color(0xFFFFF3E0),
+                      borderColor: const Color(0xFFFFB74D),
+                      textColor: isDark ? const Color(0xFFFFCC80) : const Color(0xFFE65100),
+                    ),
+                    _buildAstroBadge(
+                      icon: Icons.nightlight_round,
+                      label: '${isGujarati ? 'ચંદ્ર રાશિ' : 'चंद्र राशि'}: $moonName',
+                      bgColor: isDark ? const Color(0xFF1B233D) : const Color(0xFFEDE7F6),
+                      borderColor: const Color(0xFF9FA8DA),
+                      textColor: isDark ? const Color(0xFF90CAF9) : const Color(0xFF303F9F),
+                    ),
+                    _buildAstroBadge(
+                      icon: Icons.auto_awesome_rounded,
+                      label: '$nakshatraName (${isGujarati ? 'ચરણ' : 'चरण'} ${k.charan})',
+                      bgColor: isDark ? const Color(0xFF0F2E1E) : const Color(0xFFE8F5E9),
+                      borderColor: const Color(0xFF81C784),
+                      textColor: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF2E7D32),
+                    ),
+                    _buildAstroBadge(
+                      icon: k.mangalDosha.hasDosha ? Icons.warning_amber_rounded : Icons.verified_rounded,
+                      label: k.mangalDosha.hasDosha
+                          ? (isGujarati ? 'મંગળ દોષ' : 'मांगलिक')
+                          : (isGujarati ? 'દોષ મુક્ત' : 'दोष मुक्त'),
+                      bgColor: k.mangalDosha.hasDosha
+                          ? (isDark ? const Color(0xFF3E1212) : const Color(0xFFFFEBEE))
+                          : (isDark ? const Color(0xFF0F2E1E) : const Color(0xFFE8F5E9)),
+                      borderColor: k.mangalDosha.hasDosha ? Colors.redAccent : const Color(0xFF81C784),
+                      textColor: k.mangalDosha.hasDosha
+                          ? Colors.redAccent
+                          : (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32)),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // 4. Action Buttons Footer Bar
+                Row(
+                  children: [
+                    // View Kundali Primary Button
+                    Expanded(
+                      flex: 5,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE65100), Color(0xFFFF8F00)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFE65100).withAlpha(60),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => KundaliPreviewScreen(kundali: k),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.visibility_rounded, size: 16),
+                          label: Text(
+                            isGujarati ? 'કુંડળી જુઓ' : 'कुंडली देखें',
+                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // PDF Button
+                    Expanded(
+                      flex: 4,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: isDark ? AppColors.goldLight : const Color(0xFFBF360C),
+                          side: BorderSide(
+                            color: isDark ? AppColors.gold.withAlpha(150) : const Color(0xFFE65100),
+                            width: 1.2,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          backgroundColor: isDark ? AppColors.gold.withAlpha(20) : const Color(0xFFFFF8E1),
+                        ),
+                        onPressed: () => _promptDownloadPdf(context, k, isGujarati),
+                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
+                        label: Text(
+                          isGujarati ? 'PDF રિપોર્ટ' : 'PDF रिपोर्ट',
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Share Button
+                    Builder(
+                      builder: (btnCtx) => InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _shareKundali(btnCtx, k, isGujarati),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withAlpha(40) : const Color(0xFFCCCCCC),
+                            ),
+                            color: isDark ? Colors.white.withAlpha(15) : const Color(0xFFF5F5F5),
+                          ),
+                          child: Icon(
+                            Icons.share_rounded,
+                            size: 18,
+                            color: isDark ? AppColors.goldLight : const Color(0xFF444444),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAstroBadge({
+    required IconData icon,
+    required String label,
+    required Color bgColor,
+    required Color borderColor,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor.withAlpha(140), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+        ],
       ),
     );
   }

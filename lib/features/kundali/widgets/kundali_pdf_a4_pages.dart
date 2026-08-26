@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/constants/rashi_data.dart';
 import '../models/kundali_model.dart';
+import '../services/kundali_calculator.dart';
 import 'kundali_chart_painter.dart';
 
 /// A4 Sized Flutter Page Widgets for generating high-definition,
@@ -568,35 +569,46 @@ class KundaliPdfA4Pages {
           const SizedBox(height: 5),
 
           // 3. Kaal Sarp & Shani Sade Sati Analysis
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: lightCard,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: borderCol, width: 0.9),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isGujarati ? 'વિશેષ કાળસર્પ & સાડાસાતી વિશ્લેષણ (Kaal Sarp & Shani Analysis)' : 'विशेष कालसर्प & साढ़ेसाती विश्लेषण (Kaal Sarp & Shani Analysis)',
-                  style: _fontBold(isGujarati, 9.5, maroonColor),
+          Builder(
+            builder: (context) {
+              final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+                planets: kundali.planets,
+                moonRashiId: kundali.moonRashiId,
+                lagnaRashiId: kundali.lagnaRashiId,
+              );
+              return Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: lightCard,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: borderCol, width: 0.9),
                 ),
-                const SizedBox(height: 3),
-                const Divider(color: borderCol, thickness: 0.5, height: 4),
-                const SizedBox(height: 3),
-                Text(
-                  isGujarati
-                      ? '• કાળસર્પ સ્થિતિ: રાહુ-કેતુ અક્ષમાં ગ્રહોની સ્થિતિ અનુકૂળ છે. આર્થિક ઉતાર-ચઢાવથી બચવા શિવ આરાધના શ્રેષ્ઠ રહેશે.\n'
-                          '• શનિ સાડાસાતી: પરિશ્રમનું ઉત્તમ ફળ મળશે, ધીરજ અને સદાચાર જાળવવો.\n'
-                          '• વૈદિક મંત્ર: "ૐ ત્ર્યમ્બકં યજામહે સુગન્ધિં પુષ્ટિવર્ધનમ્" (દરરોજ ૧૧ વાર જાપ કરવો) | રુદ્રાક્ષ: ૭ અથવા ૮ મુખી'
-                      : '• कालसर्प स्थिति: राहु-केतु अक्ष में ग्रहों की स्थिति शुभ है। आर्थिक उतार-चढ़ाव से बचाव हेतु शिव उपासना सर्वोत्तम है\n'
-                          '• शनि साढ़ेसाती: पुरुषार्थ का उत्तम फल मिलेगा, धैर्य व सदाचार बनाए रखें\n'
-                          '• वैदिक मंत्र: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्" (नित्य ११ बार जप करें) | रुद्राक्ष: ७ अथवा ८ मुखी',
-                  style: _fontRegular(isGujarati, 7.6, darkBg, height: 1.35),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isGujarati ? 'વિશેષ કાળસર્પ & સાડાસાતી વિશ્લેષણ (Kaal Sarp & Shani Analysis)' : 'विशेष कालसर्प & साढ़ेसाती विश्लेषण (Kaal Sarp & Shani Analysis)',
+                      style: _fontBold(isGujarati, 9.5, maroonColor),
+                    ),
+                    const SizedBox(height: 3),
+                    const Divider(color: borderCol, thickness: 0.5, height: 4),
+                    const SizedBox(height: 3),
+                    Text(
+                      isGujarati
+                          ? '• કાળસર્પ સ્થિતિ: [${doshaAnalysis.kaalSarpNameGu}] ${doshaAnalysis.kaalSarpDescGu}\n'
+                              '• શનિ સાડાસાતી: [${doshaAnalysis.shaniStatusGu}] ${doshaAnalysis.shaniDescGu}\n'
+                              '• ${doshaAnalysis.vedicMantraGu}\n'
+                              '• ${doshaAnalysis.rudrakshaGu.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneGu.replaceAll('• ', '')}'
+                          : '• कालसर्प स्थिति: [${doshaAnalysis.kaalSarpNameHi}] ${doshaAnalysis.kaalSarpDescHi}\n'
+                              '• शनि साढ़ेसाती: [${doshaAnalysis.shaniStatusHi}] ${doshaAnalysis.shaniDescHi}\n'
+                              '• ${doshaAnalysis.vedicMantraHi}\n'
+                              '• ${doshaAnalysis.rudrakshaHi.replaceAll('• ', '')} | ${doshaAnalysis.gemstoneHi.replaceAll('• ', '')}',
+                      style: _fontRegular(isGujarati, 7.6, darkBg, height: 1.35),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 5),
 

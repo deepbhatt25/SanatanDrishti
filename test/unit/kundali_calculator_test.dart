@@ -25,8 +25,11 @@ void main() {
       expect(kundali.lagnaRashiId >= 1 && kundali.lagnaRashiId <= 12, true);
       expect(kundali.lagnaDegree >= 0.0 && kundali.lagnaDegree <= 30.0, true);
 
-      // 9 Graha verification
-      expect(kundali.planets.length, 9);
+      // 12 Planets (9 Vedic Grahas + Uranus, Neptune, Pluto) verification
+      expect(kundali.planets.length, 12);
+      expect(kundali.planets.any((p) => p.nameEn == 'Pluto'), true);
+      expect(kundali.planets.any((p) => p.nameEn == 'Neptune'), true);
+      expect(kundali.planets.any((p) => p.nameEn == 'Uranus'), true);
       for (final p in kundali.planets) {
         expect(p.rashiId >= 1 && p.rashiId <= 12, true);
         expect(p.degree >= 0.0 && p.degree <= 30.0, true);
@@ -138,6 +141,24 @@ void main() {
       expect(kundali.lifePrediction.personalitySwabhav.descriptionGu.isNotEmpty, true);
       expect(kundali.lifePrediction.marriagePrediction.descriptionGu.isNotEmpty, true);
       expect(kundali.lifePrediction.careerBhagyodaya.descriptionGu.isNotEmpty, true);
+
+      // Dosha Analysis (Kaal Sarp & Shani Sade Sati 2nd Charan & Powerful Gemstones)
+      final doshaAnalysis = KundaliCalculator.calculateDoshaAnalysis(
+        planets: kundali.planets,
+        moonRashiId: kundali.moonRashiId,
+        lagnaRashiId: kundali.lagnaRashiId,
+      );
+
+      // Kaal Sarp Yog active (Vasuki Kaal Sarp / Hemmed on Rahu-Ketu axis)
+      expect(doshaAnalysis.hasKaalSarp, true);
+      expect(doshaAnalysis.kaalSarpNameGu.contains('કાળસર્પ'), true);
+
+      // Sade Sati 2nd Charan for Pisces Moon in 2026
+      expect(doshaAnalysis.shaniStatusGu.contains('દ્વિતીય ચરણ'), true);
+
+      // Powerful and Avoid Gemstones
+      expect(doshaAnalysis.powerfulGemstoneGu.isNotEmpty, true);
+      expect(doshaAnalysis.avoidGemstoneGu.isNotEmpty, true);
     });
   });
 }

@@ -385,6 +385,12 @@ class KundaliChartPainter extends CustomPainter {
           return const Color(0xFFBCAAA4); // Rahu (Brown)
         case 9:
           return const Color(0xFFBCAAA4); // Ketu (Brown)
+        case 10:
+          return const Color(0xFF80DEEA); // Uranus (Cyan/Teal)
+        case 11:
+          return const Color(0xFF9FA8DA); // Neptune (Indigo/Blue)
+        case 12:
+          return const Color(0xFFD1C4E9); // Pluto (Deep Lavender)
         case 0:
           return const Color(0xFFFFCC80); // Lagna (Orange)
         default:
@@ -410,6 +416,12 @@ class KundaliChartPainter extends CustomPainter {
           return const Color(0xFF5D4037); // Rahu
         case 9:
           return const Color(0xFF5D4037); // Ketu
+        case 10:
+          return const Color(0xFF00838F); // Uranus (Cyan/Teal)
+        case 11:
+          return const Color(0xFF283593); // Neptune (Indigo/Navy)
+        case 12:
+          return const Color(0xFF4A148C); // Pluto (Deep Purple)
         case 0:
           return const Color(0xFFB71C1C); // Lagna
         default:

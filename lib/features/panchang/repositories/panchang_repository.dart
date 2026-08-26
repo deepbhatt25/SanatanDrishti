@@ -109,6 +109,7 @@ class PanchangRepository {
       stepDegrees: 12.0,
       angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
     );
+    final prevTithiIdx = (tithiIndex - 1 + 30) % 30;
     final nextTithiIdx = (tithiIndex + 1) % 30;
 
     final nakshatraIdx = (angles.nakshatraAngle / (360.0 / 27.0)).floor() % 27;
@@ -117,6 +118,7 @@ class PanchangRepository {
       stepDegrees: 360.0 / 27.0,
       angleGetter: (t) => _calculateAnglesAt(t).nakshatraAngle,
     );
+    final prevNakshatraIdx = (nakshatraIdx - 1 + 27) % 27;
     final nextNakshatraIdx = (nakshatraIdx + 1) % 27;
 
     final yogaIdx = (angles.yogaAngle / (360.0 / 27.0)).floor() % 27;
@@ -125,9 +127,11 @@ class PanchangRepository {
       stepDegrees: 360.0 / 27.0,
       angleGetter: (t) => _calculateAnglesAt(t).yogaAngle,
     );
+    final prevYogaIdx = (yogaIdx - 1 + 27) % 27;
     final nextYogaIdx = (yogaIdx + 1) % 27;
 
     final karanaFullIdx = (angles.tithiAngle / 6.0).floor() % 60;
+    final prevKarana = _getKaranaName(karanaFullIdx - 1);
     final nextKarana = _getKaranaName(karanaFullIdx + 1);
     final karanaSpan = _calculateSpanForAngle(
       refDateTime: refLocalTime,
@@ -143,7 +147,21 @@ class PanchangRepository {
       maxBack: const Duration(hours: 60),
       maxForward: const Duration(hours: 60),
     );
+    final prevRashiIdx = (rashiIdx - 1 + 12) % 12;
     final nextRashiIdx = (rashiIdx + 1) % 12;
+
+    final sunRashiIdx = (angles.sunLong / 30.0).floor() % 12;
+    final prevSunRashiIdx = (sunRashiIdx - 1 + 12) % 12;
+    final nextSunRashiIdx = (sunRashiIdx + 1) % 12;
+    final sunRashiSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 30.0,
+      angleGetter: (t) => _calculateAnglesAt(t).sunLong,
+      maxBack: const Duration(days: 35),
+      maxForward: const Duration(days: 35),
+    );
+
+    final prevWeekday = ((date.weekday - 2 + 7) % 7) + 1;
     final nextWeekday = (date.weekday % 7) + 1;
 
     return PanchangModel(
@@ -153,32 +171,52 @@ class PanchangRepository {
       tithiPaksha: data['paksha']?.toString() ?? 'शुक्ल पक्ष (Shukla Paksha)',
       tithiStartTime: _formatSpanDateTime(tithiSpan.startTime),
       tithiEndTime: _formatSpanDateTime(tithiSpan.endTime),
+      prevTithi: _tithiNamesHi[prevTithiIdx],
+      prevTithiGujarati: _tithiNamesGu[prevTithiIdx],
       nextTithi: _tithiNamesHi[nextTithiIdx],
       nextTithiGujarati: _tithiNamesGu[nextTithiIdx],
       nakshatra: nakshatraName,
       nakshatraStartTime: _formatSpanDateTime(nakshatraSpan.startTime),
       nakshatraEndTime: _formatSpanDateTime(nakshatraSpan.endTime),
+      prevNakshatra: _nakshatraNamesHi[prevNakshatraIdx],
+      prevNakshatraGujarati: _nakshatraNamesGu[prevNakshatraIdx],
       nextNakshatra: _nakshatraNamesHi[nextNakshatraIdx],
       nextNakshatraGujarati: _nakshatraNamesGu[nextNakshatraIdx],
       yoga: yogaName,
       yogaStartTime: _formatSpanDateTime(yogaSpan.startTime),
       yogaEndTime: _formatSpanDateTime(yogaSpan.endTime),
+      prevYoga: _yogaNamesHi[prevYogaIdx],
+      prevYogaGujarati: _yogaNamesGu[prevYogaIdx],
       nextYoga: _yogaNamesHi[nextYogaIdx],
       nextYogaGujarati: _yogaNamesGu[nextYogaIdx],
       karana: karanaName,
       karanaStartTime: _formatSpanDateTime(karanaSpan.startTime),
       karanaEndTime: _formatSpanDateTime(karanaSpan.endTime),
+      prevKarana: prevKarana.hi,
+      prevKaranaGujarati: prevKarana.gu,
       nextKarana: nextKarana.hi,
       nextKaranaGujarati: nextKarana.gu,
       rashi: _rashiNamesHi[rashiIdx],
       rashiGujarati: _rashiNamesGu[rashiIdx],
       rashiStartTime: _formatSpanDateTime(rashiSpan.startTime),
       rashiEndTime: _formatSpanDateTime(rashiSpan.endTime),
+      prevRashi: _rashiNamesHi[prevRashiIdx],
+      prevRashiGujarati: _rashiNamesGu[prevRashiIdx],
       nextRashi: _rashiNamesHi[nextRashiIdx],
       nextRashiGujarati: _rashiNamesGu[nextRashiIdx],
+      sunRashi: _rashiNamesHi[sunRashiIdx],
+      sunRashiGujarati: _rashiNamesGu[sunRashiIdx],
+      sunRashiStartTime: _formatSpanDateTime(sunRashiSpan.startTime),
+      sunRashiEndTime: _formatSpanDateTime(sunRashiSpan.endTime),
+      prevSunRashi: _rashiNamesHi[prevSunRashiIdx],
+      prevSunRashiGujarati: _rashiNamesGu[prevSunRashiIdx],
+      nextSunRashi: _rashiNamesHi[nextSunRashiIdx],
+      nextSunRashiGujarati: _rashiNamesGu[nextSunRashiIdx],
       vaar: _getVaar(date.weekday),
       vaarStartTime: sunTimes.sunrise,
       vaarEndTime: nextSunTimes.sunrise,
+      prevVaar: _getVaar(prevWeekday),
+      prevVaarGujarati: _getVaarGu(prevWeekday),
       nextVaar: _getVaar(nextWeekday),
       nextVaarGujarati: _getVaarGu(nextWeekday),
       sunrise: data['sunrise']?.toString() ?? sunTimes.sunrise,
@@ -580,6 +618,7 @@ class PanchangRepository {
       stepDegrees: 12.0,
       angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
     );
+    final prevTithiIdx = (tithiIndex - 1 + 30) % 30;
     final nextTithiIdx = (tithiIndex + 1) % 30;
 
     // 2. Nakshatra Calculation & Timing Spans
@@ -589,6 +628,7 @@ class PanchangRepository {
       stepDegrees: 360.0 / 27.0,
       angleGetter: (t) => _calculateAnglesAt(t).nakshatraAngle,
     );
+    final prevNakshatraIdx = (nakshatraIdx - 1 + 27) % 27;
     final nextNakshatraIdx = (nakshatraIdx + 1) % 27;
 
     // 3. Yoga Calculation & Timing Spans
@@ -598,11 +638,13 @@ class PanchangRepository {
       stepDegrees: 360.0 / 27.0,
       angleGetter: (t) => _calculateAnglesAt(t).yogaAngle,
     );
+    final prevYogaIdx = (yogaIdx - 1 + 27) % 27;
     final nextYogaIdx = (yogaIdx + 1) % 27;
 
     // 4. Karana Calculation & Timing Spans
     final karanaFullIdx = (tithiAngle / 6.0).floor() % 60;
     final curKarana = _getKaranaName(karanaFullIdx);
+    final prevKarana = _getKaranaName(karanaFullIdx - 1);
     final nextKarana = _getKaranaName(karanaFullIdx + 1);
     final karanaSpan = _calculateSpanForAngle(
       refDateTime: refLocalTime,
@@ -619,9 +661,23 @@ class PanchangRepository {
       maxBack: const Duration(hours: 60),
       maxForward: const Duration(hours: 60),
     );
+    final prevRashiIdx = (rashiIdx - 1 + 12) % 12;
     final nextRashiIdx = (rashiIdx + 1) % 12;
 
+    // Sun Rashi (Surya Rashi) & Timing Spans
+    final sunRashiIdx = (angles.sunLong / 30.0).floor() % 12;
+    final prevSunRashiIdx = (sunRashiIdx - 1 + 12) % 12;
+    final nextSunRashiIdx = (sunRashiIdx + 1) % 12;
+    final sunRashiSpan = _calculateSpanForAngle(
+      refDateTime: refLocalTime,
+      stepDegrees: 30.0,
+      angleGetter: (t) => _calculateAnglesAt(t).sunLong,
+      maxBack: const Duration(days: 35),
+      maxForward: const Duration(days: 35),
+    );
+
     // 6. Vaar Timing (Sunrise to Next Sunrise)
+    final prevWeekday = ((date.weekday - 2 + 7) % 7) + 1;
     final nextWeekday = (date.weekday % 7) + 1;
 
     // 7. Dynamic Sun & Moon Times
@@ -634,32 +690,52 @@ class PanchangRepository {
       tithiPaksha: isShukla ? 'शुक्ल पक्ष (Shukla Paksha)' : 'कृष्ण पक्ष (Krishna Paksha)',
       tithiStartTime: _formatSpanDateTime(tithiSpan.startTime),
       tithiEndTime: _formatSpanDateTime(tithiSpan.endTime),
+      prevTithi: _tithiNamesHi[prevTithiIdx],
+      prevTithiGujarati: _tithiNamesGu[prevTithiIdx],
       nextTithi: _tithiNamesHi[nextTithiIdx],
       nextTithiGujarati: _tithiNamesGu[nextTithiIdx],
       nakshatra: _nakshatraNamesHi[nakshatraIdx],
       nakshatraStartTime: _formatSpanDateTime(nakshatraSpan.startTime),
       nakshatraEndTime: _formatSpanDateTime(nakshatraSpan.endTime),
+      prevNakshatra: _nakshatraNamesHi[prevNakshatraIdx],
+      prevNakshatraGujarati: _nakshatraNamesGu[prevNakshatraIdx],
       nextNakshatra: _nakshatraNamesHi[nextNakshatraIdx],
       nextNakshatraGujarati: _nakshatraNamesGu[nextNakshatraIdx],
       yoga: _yogaNamesHi[yogaIdx],
       yogaStartTime: _formatSpanDateTime(yogaSpan.startTime),
       yogaEndTime: _formatSpanDateTime(yogaSpan.endTime),
+      prevYoga: _yogaNamesHi[prevYogaIdx],
+      prevYogaGujarati: _yogaNamesGu[prevYogaIdx],
       nextYoga: _yogaNamesHi[nextYogaIdx],
       nextYogaGujarati: _yogaNamesGu[nextYogaIdx],
       karana: curKarana.hi,
       karanaStartTime: _formatSpanDateTime(karanaSpan.startTime),
       karanaEndTime: _formatSpanDateTime(karanaSpan.endTime),
+      prevKarana: prevKarana.hi,
+      prevKaranaGujarati: prevKarana.gu,
       nextKarana: nextKarana.hi,
       nextKaranaGujarati: nextKarana.gu,
       rashi: _rashiNamesHi[rashiIdx],
       rashiGujarati: _rashiNamesGu[rashiIdx],
       rashiStartTime: _formatSpanDateTime(rashiSpan.startTime),
       rashiEndTime: _formatSpanDateTime(rashiSpan.endTime),
+      prevRashi: _rashiNamesHi[prevRashiIdx],
+      prevRashiGujarati: _rashiNamesGu[prevRashiIdx],
       nextRashi: _rashiNamesHi[nextRashiIdx],
       nextRashiGujarati: _rashiNamesGu[nextRashiIdx],
+      sunRashi: _rashiNamesHi[sunRashiIdx],
+      sunRashiGujarati: _rashiNamesGu[sunRashiIdx],
+      sunRashiStartTime: _formatSpanDateTime(sunRashiSpan.startTime),
+      sunRashiEndTime: _formatSpanDateTime(sunRashiSpan.endTime),
+      prevSunRashi: _rashiNamesHi[prevSunRashiIdx],
+      prevSunRashiGujarati: _rashiNamesGu[prevSunRashiIdx],
+      nextSunRashi: _rashiNamesHi[nextSunRashiIdx],
+      nextSunRashiGujarati: _rashiNamesGu[nextSunRashiIdx],
       vaar: _getVaar(date.weekday),
       vaarStartTime: sunTimes.sunrise,
       vaarEndTime: nextSunTimes.sunrise,
+      prevVaar: _getVaar(prevWeekday),
+      prevVaarGujarati: _getVaarGu(prevWeekday),
       nextVaar: _getVaar(nextWeekday),
       nextVaarGujarati: _getVaarGu(nextWeekday),
       sunrise: sunTimes.sunrise,
@@ -1156,7 +1232,9 @@ class PanchangRepository {
       ('मीन', 'મીન', 'Pisces', '♓', 'गुरु (Jupiter)', 'ગુરુ (Jupiter)', 'जल (Water)', 'જળ (Water)', 'पीला / केसरिया', 'પીળો / કેસરી', 'पुखराज (Yellow Sapphire)', 'પોખરાજ (Yellow Sapphire)', 'देव', 'દેવ', 'आदि', 'આદિ'),
     ];
 
+    final prevRashiIdx = (rashiIdx - 1 + 12) % 12;
     final rInfo = rashiData[rashiIdx];
+    final prevRInfo = rashiData[prevRashiIdx];
     final nextRInfo = rashiData[nextRashiIdx];
 
     // 2. Janma Nakshatra (0 to 26) & Pada (1 to 4) & Timing Spans
@@ -1169,6 +1247,7 @@ class PanchangRepository {
       stepDegrees: nakshatraDeg,
       angleGetter: (t) => _calculateAnglesAt(t).nakshatraAngle,
     );
+    final prevNakshatraIdx = (nakshatraIdx - 1 + 27) % 27;
     final nextNakshatraIdx = (nakshatraIdx + 1) % 27;
 
     // 3. Tithi at Birth Time
@@ -1178,6 +1257,7 @@ class PanchangRepository {
       stepDegrees: 12.0,
       angleGetter: (t) => _calculateAnglesAt(t).tithiAngle,
     );
+    final prevTithiIdx = (tithiIndex - 1 + 30) % 30;
     final nextTithiIdx = (tithiIndex + 1) % 30;
 
     // 4. Yoga at Birth Time
@@ -1187,11 +1267,13 @@ class PanchangRepository {
       stepDegrees: 360.0 / 27.0,
       angleGetter: (t) => _calculateAnglesAt(t).yogaAngle,
     );
+    final prevYogaIdx = (yogaIdx - 1 + 27) % 27;
     final nextYogaIdx = (yogaIdx + 1) % 27;
 
     // 5. Karana at Birth Time
     final karanaFullIdx = (tithiAngle / 6.0).floor() % 60;
     final curKarana = _getKaranaName(karanaFullIdx);
+    final prevKarana = _getKaranaName(karanaFullIdx - 1);
     final nextKarana = _getKaranaName(karanaFullIdx + 1);
     final karanaSpan = _calculateSpanForAngle(
       refDateTime: birthDateTime,
@@ -1202,6 +1284,7 @@ class PanchangRepository {
     // 6. Vaar at Birth Time
     final sunTimes = _calculateSunTimes(birthDateTime, city);
     final nextSunTimes = _calculateSunTimes(birthDateTime.add(const Duration(days: 1)), city);
+    final prevWeekday = ((birthDateTime.weekday - 2 + 7) % 7) + 1;
     final nextWeekday = (birthDateTime.weekday % 7) + 1;
 
     const namaksharDatabase = [
@@ -1245,6 +1328,9 @@ class PanchangRepository {
       rashiSymbol: rInfo.$4,
       rashiStartTime: _formatSpanDateTime(rashiSpan.startTime),
       rashiEndTime: _formatSpanDateTime(rashiSpan.endTime),
+      prevRashiHindi: prevRInfo.$1,
+      prevRashiGujarati: prevRInfo.$2,
+      prevRashiEn: prevRInfo.$3,
       nextRashiHindi: nextRInfo.$1,
       nextRashiGujarati: nextRInfo.$2,
       nextRashiEn: nextRInfo.$3,
@@ -1253,30 +1339,40 @@ class PanchangRepository {
       pada: pada,
       nakshatraStartTime: _formatSpanDateTime(nakshatraSpan.startTime),
       nakshatraEndTime: _formatSpanDateTime(nakshatraSpan.endTime),
+      prevNakshatraHindi: _nakshatraNamesHi[prevNakshatraIdx],
+      prevNakshatraGujarati: _nakshatraNamesGu[prevNakshatraIdx],
       nextNakshatraHindi: _nakshatraNamesHi[nextNakshatraIdx],
       nextNakshatraGujarati: _nakshatraNamesGu[nextNakshatraIdx],
       tithiHindi: _tithiNamesHi[tithiIndex],
       tithiGujarati: _tithiNamesGu[tithiIndex],
       tithiStartTime: _formatSpanDateTime(tithiSpan.startTime),
       tithiEndTime: _formatSpanDateTime(tithiSpan.endTime),
+      prevTithiHindi: _tithiNamesHi[prevTithiIdx],
+      prevTithiGujarati: _tithiNamesGu[prevTithiIdx],
       nextTithiHindi: _tithiNamesHi[nextTithiIdx],
       nextTithiGujarati: _tithiNamesGu[nextTithiIdx],
       yogaHindi: _yogaNamesHi[yogaIdx],
       yogaGujarati: _yogaNamesGu[yogaIdx],
       yogaStartTime: _formatSpanDateTime(yogaSpan.startTime),
       yogaEndTime: _formatSpanDateTime(yogaSpan.endTime),
+      prevYogaHindi: _yogaNamesHi[prevYogaIdx],
+      prevYogaGujarati: _yogaNamesGu[prevYogaIdx],
       nextYogaHindi: _yogaNamesHi[nextYogaIdx],
       nextYogaGujarati: _yogaNamesGu[nextYogaIdx],
       karanaHindi: curKarana.hi,
       karanaGujarati: curKarana.gu,
       karanaStartTime: _formatSpanDateTime(karanaSpan.startTime),
       karanaEndTime: _formatSpanDateTime(karanaSpan.endTime),
+      prevKaranaHindi: prevKarana.hi,
+      prevKaranaGujarati: prevKarana.gu,
       nextKaranaHindi: nextKarana.hi,
       nextKaranaGujarati: nextKarana.gu,
       vaarHindi: _getVaar(birthDateTime.weekday),
       vaarGujarati: _getVaarGu(birthDateTime.weekday),
       vaarStartTime: sunTimes.sunrise,
       vaarEndTime: nextSunTimes.sunrise,
+      prevVaarHindi: _getVaar(prevWeekday),
+      prevVaarGujarati: _getVaarGu(prevWeekday),
       nextVaarHindi: _getVaar(nextWeekday),
       nextVaarGujarati: _getVaarGu(nextWeekday),
       rulingPlanet: rInfo.$5,
@@ -1293,6 +1389,75 @@ class PanchangRepository {
       nadiGujarati: rInfo.$16,
       allPadaNamakshar: syllables,
       recommendedLetter: recommendedSyllable,
+      boyNames: _getRashiNameSuggestions(rashiIdx).$1,
+      boyNamesGujarati: _getRashiNameSuggestions(rashiIdx).$2,
+      girlNames: _getRashiNameSuggestions(rashiIdx).$3,
+      girlNamesGujarati: _getRashiNameSuggestions(rashiIdx).$4,
     );
+  }
+
+  static (List<String>, List<String>, List<String>, List<String>) _getRashiNameSuggestions(int rashiIdx) {
+    const boyNamesGu = [
+      ['આરોહ (Aaroh)', 'અયાનશ (Ayansh)', 'લક્ષ્ય (Lakshya)', 'લોકેન્દ્ર (Lokendra)', 'ઇશાન (Ishaan)', 'અવ્યાન (Avyaan)', 'લવ્ય (Lavya)', 'અર્હમ (Arham)'],
+      ['વિવાન (Vivaan)', 'વ્યોમ (Vyom)', 'ભવ્ય (Bhavya)', 'બ્રિજેશ (Brijesh)', 'ઉત્સવ (Utsav)', 'વરુણ (Varun)', 'વિદ્યાન (Vidyan)', 'વેદાંત (Vedant)'],
+      ['કૃષિવ (Krishiv)', 'કયાન (Kayaan)', 'કિયાન (Kiaan)', 'ક્ષિતિજ (Kshitij)', 'છવિરાજ (Chhaviraj)', 'ઘનશ્યામ (Ghanshyam)', 'કુવમ (Kuvam)', 'કાવ્ય (Kaavya)'],
+      ['હૃદય (Hriday)', 'હર્ષિત (Harshit)', 'હિયાંશ (Hiyansh)', 'હિતાર્થ (Hitarth)', 'દિવ્યાંગ (Divyang)', 'હર્ષિલ (Harshil)', 'હેતાર્થ (Hetarth)', 'હેમિલ (Hemil)'],
+      ['માનવ (Maanav)', 'મીત (Meet)', 'મનન (Manan)', 'મયંક (Mayank)', 'તક્ષિલ (Takshil)', 'માનિત (Maanit)', 'મોક્ષ (Moksh)', 'માધવ (Madhav)'],
+      ['પ્રણવ (Pranav)', 'પાર્થ (Parth)', 'પ્રયાણ (Prayan)', 'પરમ (Param)', 'પવન (Pavan)', 'પ્રશાંત (Prashant)', 'પિયાંશ (Piyansh)', 'પ્રતીક (Prateek)'],
+      ['રુદ્ર (Rudra)', 'રિયાન (Riyan)', 'તન્મય (Tanmay)', 'રિતેશ (Ritesh)', 'તક્ષ (Taksh)', 'રોનિત (Ronit)', 'રિયાનશ (Reyansh)', 'રુદ્રાંશ (Rudransh)'],
+      ['નક્ષ (Naksh)', 'નિયાન (Niyan)', 'યુવાન (Yuvaan)', 'યાશિલ (Yashil)', 'નૈતિક (Naitik)', 'નિહાન (Nihaan)', 'યજ્ઞેશ (Yagnesh)', 'યુગ (Yug)'],
+      ['ભવ્ય (Bhavya)', 'ભાર્ગવ (Bhargav)', 'ધૈર્ય (Dhairya)', 'ધ્યાન (Dhyan)', 'ધ્રુવ (Dhruv)', 'ફાલ્ગુન (Falgun)', 'ભુવન (Bhuvan)', 'ધીર (Dheer)'],
+      ['કયાન (Kayan)', 'ખ્યાત (Khyat)', 'ખગેશ (Khagesh)', 'જતીન (Jatin)', 'જીત (Jeet)', 'જિયાન (Jiyan)', 'જિગ્નેશ (Jignesh)', 'જયાન (Jayan)'],
+      ['ગૌરવ (Gaurav)', 'શૌર્ય (Shaurya)', 'સમર્થ (Samarth)', 'શિવાંશ (Shivansh)', 'સિદ્ધાર્થ (Siddharth)', 'ગિયાંશ (Giyansh)', 'શ્લોક (Shlok)', 'સમીર (Sameer)'],
+      ['દર્શ (Darsh)', 'દક્ષ (Daksh)', 'ચિરાયુ (Chirayu)', 'ચૈતન્ય (Chaitanya)', 'ઝિયાન (Ziyan)', 'ધ્રુવમ (Dhruvam)', 'દેવાંશ (Devansh)', 'ચિંતન (Chintan)'],
+    ];
+
+    const girlNamesGu = [
+      ['અનન્યા (Ananya)', 'આધ્યા (Aadhya)', 'લાવણ્યા (Lavanya)', 'ઇશિકા (Ishika)', 'અનિકા (Anika)', 'લિપિકા (Lipika)', 'આરાધ્યા (Aaradhya)', 'અન્વી (Anvi)'],
+      ['વાણિયા (Vaniya)', 'વૃષ્ટિ (Vrishti)', 'વેદિકા (Vedika)', 'બંસરી (Bansari)', 'ઉન્નતિ (Unnati)', 'વૈષ્ણવી (Vaishnavi)', 'વામિકા (Vamika)', 'વિધિ (Vidhi)'],
+      ['કાવ્યા (Kaavya)', 'કૃષા (Krisha)', 'કિઆરા (Kiara)', 'છાયા (Chhaya)', 'કૃતિકા (Kritika)', 'કનિષ્કા (Kanishka)', 'ખ્વાહિશ (Khwahish)', 'કશવી (Kashvi)'],
+      ['હિયા (Hiya)', 'હેતવી (Hetvi)', 'હરિણી (Harini)', 'દિત્યા (Ditya)', 'દિયા (Diya)', 'હૃદયા (Hridaya)', 'હેતાંશી (Hetanshi)', 'હેમાલી (Hemali)'],
+      ['માનસી (Mansi)', 'મીરા (Meera)', 'મૈત્રી (Maitri)', 'મિશિકા (Mishika)', 'તન્વી (Tanvi)', 'તારા (Taara)', 'માહિરા (Mahira)', 'મુગ્ધા (Mugdha)'],
+      ['પંક્તિ (Pankti)', 'પ્રીશા (Prisha)', 'પરિણિતા (Parinita)', 'પાખી (Pakhi)', 'પાયલ (Payal)', 'પ્રાંજલ (Pranjal)', 'પિયા (Piya)', 'પૂર્વી (Poorvi)'],
+      ['રિયા (Riya)', 'તનિષ્કા (Tanishka)', 'રુચિકા (Ruchika)', 'ત્રિષા (Trisha)', 'તારા (Taara)', 'રાશિ (Rashi)', 'રુદ્રાણી (Rudrani)', 'તિયા (Tiya)'],
+      ['નવ્યા (Navya)', 'નાયરા (Nayra)', 'યાશવી (Yashvi)', 'નિત્યા (Nitya)', 'યશિકા (Yashika)', 'નંદિની (Nandini)', 'યુવિકા (Yuvika)', 'નિરાલી (Nirali)'],
+      ['ભવ્યા (Bhavya)', 'ધૃતિ (Dhruti)', 'ધારા (Dhara)', 'ભામિની (Bhamini)', 'ફાલ્ગુની (Falguni)', 'ધ્રુવી (Dhruvi)', 'ભૈરવી (Bhairavi)', 'ધ્વનિ (Dhwani)'],
+      ['ખ્યાતિ (Khyati)', 'ખુશી (Khushi)', 'જાનવી (Jaanvi)', 'જીયા (Jiya)', 'જીનલ (Jinal)', 'જેયા (Jeya)', 'ખુશાલી (Khushali)', 'જહાનવી (Jahanvi)'],
+      ['શિયા (Shiya)', 'સારા (Sara)', 'ગૌરી (Gauri)', 'સાનવી (Saanvi)', 'શ્રેયા (Shreya)', 'શર્વી (Sharvi)', 'સિયા (Siya)', 'સ્મૃતિ (Smriti)'],
+      ['દિયા (Diya)', 'ચાર્વી (Charvi)', 'છાયા (Chhaya)', 'ઝીલ (Zil)', 'દ્રષ્ટિ (Drashti)', 'ચિત્રા (Chitra)', 'દેવાંશી (Devanshi)', 'ચારુ (Charu)'],
+    ];
+
+    const boyNamesHi = [
+      ['आरोह (Aaroh)', 'अयांश (Ayansh)', 'लक्ष्य (Lakshya)', 'लोकेन्द्र (Lokendra)', 'ईशान (Ishaan)', 'अव्यान (Avyaan)', 'लव्य (Lavya)', 'अरहम (Arham)'],
+      ['विवान (Vivaan)', 'व्योम (Vyom)', 'भव्य (Bhavya)', 'बृजेश (Brijesh)', 'उत्सव (Utsav)', 'वरुण (Varun)', 'विद्यान (Vidyan)', 'वेदांत (Vedant)'],
+      ['कृषिव (Krishiv)', 'कयान (Kayaan)', 'कियान (Kiaan)', 'क्षितिज (Kshitij)', 'छविराज (Chhaviraj)', 'घनश्याम (Ghanshyam)', 'कुवम (Kuvam)', 'काव्य (Kaavya)'],
+      ['हृदय (Hriday)', 'हर्षित (Harshit)', 'हियांश (Hiyansh)', 'हितार्थ (Hitarth)', 'दिव्यांग (Divyang)', 'हर्षिल (Harshil)', 'हेतार्थ (Hetarth)', 'हेमिल (Hemil)'],
+      ['मानव (Maanav)', 'मीत (Meet)', 'मनन (Manan)', 'मयंक (Mayank)', 'तक्षिल (Takshil)', 'मानित (Maanit)', 'मोक्ष (Moksh)', 'माधव (Madhav)'],
+      ['प्रणव (Pranav)', 'पार्थ (Parth)', 'प्रयाण (Prayan)', 'परम (Param)', 'पवन (Pavan)', 'प्रशांत (Prashant)', 'पियांश (Piyansh)', 'प्रतीक (Prateek)'],
+      ['रुद्र (Rudra)', 'रियान (Riyan)', 'तन्मय (Tanmay)', 'रितेश (Ritesh)', 'तक्ष (Taksh)', 'रोनित (Ronit)', 'रियानश (Reyansh)', 'रुद्रांश (Rudransh)'],
+      ['नक्ष (Naksh)', 'नियान (Niyan)', 'युवान (Yuvaan)', 'याशिल (Yashil)', 'नैतिक (Naitik)', 'निहान (Nihaan)', 'यज्ञेश (Yagnesh)', 'युग (Yug)'],
+      ['भव्य (Bhavya)', 'भार्गव (Bhargav)', 'धैर्य (Dhairya)', 'ध्यान (Dhyan)', 'ध्रुव (Dhruv)', 'फाल्गुन (Falgun)', 'भुवन (Bhuvan)', 'धीर (Dheer)'],
+      ['कयान (Kayan)', 'ख्यात (Khyat)', 'खगेश (Khagesh)', 'जतिन (Jatin)', 'जीत (Jeet)', 'जियान (Jiyan)', 'जिग्नेश (Jignesh)', 'जयान (Jayan)'],
+      ['गौरव (Gaurav)', 'शौर्य (Shaurya)', 'समर्थ (Samarth)', 'शिवांश (Shivansh)', 'सिद्धार्थ (Siddharth)', 'गियांश (Giyansh)', 'श्लोक (Shlok)', 'समीर (Sameer)'],
+      ['दर्श (Darsh)', 'दक्ष (Daksh)', 'चिरायु (Chirayu)', 'चैतन्य (Chaitanya)', 'झियान (Ziyan)', 'ध्रुवम (Dhruvam)', 'देवांश (Devansh)', 'चिंतन (Chintan)'],
+    ];
+
+    const girlNamesHi = [
+      ['अनन्या (Ananya)', 'आध्या (Aadhya)', 'लावण्या (Lavanya)', 'इशिका (Ishika)', 'अनिका (Anika)', 'लिपिका (Lipika)', 'आराध्या (Aaradhya)', 'अन्वी (Anvi)'],
+      ['वाणिया (Vaniya)', 'वृष्टि (Vrishti)', 'वेदिका (Vedika)', 'बांसुरी (Bansari)', 'उन्नति (Unnati)', 'वैष्णवी (Vaishnavi)', 'वामिका (Vamika)', 'विधि (Vidhi)'],
+      ['काव्या (Kaavya)', 'कृषा (Krisha)', 'किआरा (Kiara)', 'छाया (Chhaya)', 'कृतिका (Kritika)', 'कनिष्का (Kanishka)', 'ख्वाहिश (Khwahish)', 'कशवी (Kashvi)'],
+      ['हिया (Hiya)', 'हेतवी (Hetvi)', 'हरिणी (Harini)', 'दित्या (Ditya)', 'दिया (Diya)', 'हृदया (Hridaya)', 'हेतांशी (Hetanshi)', 'हेमाली (Hemali)'],
+      ['मानसी (Mansi)', 'मीरा (Meera)', 'मैत्री (Maitri)', 'मिशिका (Mishika)', 'तन्वी (Tanvi)', 'तारा (Taara)', 'माहिरा (Mahira)', 'मुग्धा (Mugdha)'],
+      ['पंक्ति (Pankti)', 'प्रीशा (Prisha)', 'परिणीता (Parinita)', 'पाखी (Pakhi)', 'पायल (Payal)', 'प्रांजल (Pranjal)', 'पिया (Piya)', 'पूर्वी (Poorvi)'],
+      ['रिया (Riya)', 'तनिष्का (Tanishka)', 'रुचिका (Ruchika)', 'त्रिषा (Trisha)', 'तारा (Taara)', 'राशि (Rashi)', 'रुद्राणी (Rudrani)', 'तिया (Tiya)'],
+      ['नव्या (Navya)', 'नायरा (Nayra)', 'याशवी (Yashvi)', 'नित्या (Nitya)', 'यशिका (Yashika)', 'नंदिनी (Nandini)', 'युविका (Yuvika)', 'निराली (Nirali)'],
+      ['भव्या (Bhavya)', 'धृति (Dhruti)', 'धारा (Dhara)', 'भामिनी (Bhamini)', 'फाल्गुनी (Falguni)', 'ध्रुवी (Dhruvi)', 'भैरवी (Bhairavi)', 'ध्वनि (Dhwani)'],
+      ['ख्याति (Khyati)', 'खुशी (Khushi)', 'जानवी (Jaanvi)', 'जीया (Jiya)', 'जीनल (Jinal)', 'जेया (Jeya)', 'खुशाली (Khushali)', 'जहानवी (Jahanvi)'],
+      ['शिया (Shiya)', 'सारा (Sara)', 'गौरी (Gauri)', 'सान्वी (Saanvi)', 'श्रेया (Shreya)', 'शर्वी (Sharvi)', 'सिया (Siya)', 'स्मृति (Smriti)'],
+      ['दिया (Diya)', 'चार्वी (Charvi)', 'छाया (Chhaya)', 'झील (Zil)', 'दृष्टि (Drashti)', 'चित्रा (Chitra)', 'देवांशी (Devanshi)', 'चारू (Charu)'],
+    ];
+
+    final idx = rashiIdx.clamp(0, 11);
+    return (boyNamesHi[idx], boyNamesGu[idx], girlNamesHi[idx], girlNamesGu[idx]);
   }
 }
