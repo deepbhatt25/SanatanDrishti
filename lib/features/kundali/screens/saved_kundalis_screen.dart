@@ -48,24 +48,48 @@ class SavedKundalisScreen extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.cardDark,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.gold, width: 1.2),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(color: AppColors.gold),
-              const SizedBox(height: 16),
-              Text(
-                isGujarati ? 'પીડીએફ તૈયાર થઈ રહી છે...' : 'PDF तैयार की जा रही है...',
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.gold, width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(100),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: AppColors.gold),
+                const SizedBox(height: 18),
+                Text(
+                  isGujarati ? 'પીડીએફ તૈયાર થઈ રહી છે...' : 'PDF तैयार की जा रही है...',
+                  textAlign: TextAlign.center,
+                  style: isGujarati
+                      ? GoogleFonts.notoSerifGujarati(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                        )
+                      : GoogleFonts.notoSerifDevanagari(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -203,24 +227,48 @@ class SavedKundalisScreen extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.cardDark,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.gold, width: 1.2),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(color: AppColors.gold),
-              const SizedBox(height: 16),
-              Text(
-                isGujarati ? 'પીડીએફ શેરિંગ તૈયાર થઈ રહી છે...' : 'PDF शेयरिंग तैयार की जा रही है...',
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.gold, width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(100),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: AppColors.gold),
+                const SizedBox(height: 18),
+                Text(
+                  isGujarati ? 'પીડીએફ શેરિંગ તૈયાર થઈ રહી છે...' : 'PDF शेयरिंग तैयार की जा रही है...',
+                  textAlign: TextAlign.center,
+                  style: isGujarati
+                      ? GoogleFonts.notoSerifGujarati(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                        )
+                      : GoogleFonts.notoSerifDevanagari(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
