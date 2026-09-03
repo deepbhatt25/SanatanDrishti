@@ -1,4 +1,4 @@
-package com.bhagvat.geeta
+package com.sanatandrishti.app
 
 import io.flutter.embedding.android.FlutterActivity
 

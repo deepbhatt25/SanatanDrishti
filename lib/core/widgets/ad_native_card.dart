@@ -26,14 +26,39 @@ class _AdNativeCardState extends State<AdNativeCard> {
   bool _hasFailed = false;
 
   @override
+  void initState() {
+    super.initState();
+    AdConfig.adsVisibilityNotifier.addListener(_onVisibilityChanged);
+  }
+
+  void _onVisibilityChanged() {
+    if (!mounted) return;
+    if (!AdConfig.canShowNativeCard) {
+      _nativeAd?.dispose();
+      _nativeAd = null;
+      setState(() {
+        _isLoaded = false;
+      });
+    } else if (_nativeAd == null && !_hasFailed) {
+      _loadAd();
+    } else {
+      setState(() {});
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_nativeAd == null && !_hasFailed) {
+    if (AdConfig.canShowNativeCard && _nativeAd == null && !_hasFailed) {
       _loadAd();
     }
   }
 
   void _loadAd() {
+    if (!AdConfig.canShowNativeCard) {
+      return;
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     _nativeAd = NativeAd(
@@ -93,13 +118,14 @@ class _AdNativeCardState extends State<AdNativeCard> {
 
   @override
   void dispose() {
+    AdConfig.adsVisibilityNotifier.removeListener(_onVisibilityChanged);
     _nativeAd?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_hasFailed || (!_isLoaded && _nativeAd == null)) {
+    if (!AdConfig.canShowNativeCard || _hasFailed || (!_isLoaded && _nativeAd == null)) {
       return const SizedBox.shrink();
     }
 

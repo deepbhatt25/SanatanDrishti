@@ -84,15 +84,17 @@ class AdService with WidgetsBindingObserver {
   }
 
   void _preloadAds() {
-    loadAppOpenAd();
-    loadInterstitialAd();
-    loadRewardedAd();
-    loadRewardedInterstitialAd();
+    if (AdConfig.canShowAppOpen) loadAppOpenAd();
+    if (AdConfig.canShowInterstitial) loadInterstitialAd();
+    if (AdConfig.canShowRewarded) loadRewardedAd();
+    if (AdConfig.canShowRewardedInterstitial) loadRewardedInterstitialAd();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      if (!AdConfig.canShowAppOpen) return;
+
       // 1. Suppress App Open ad if resuming from an interstitial or rewarded ad
       if (_suppressAppOpenOnNextResume) {
         _suppressAppOpenOnNextResume = false;
@@ -125,7 +127,7 @@ class AdService with WidgetsBindingObserver {
   // ===========================================================================
 
   void loadAppOpenAd({VoidCallback? onLoaded}) {
-    if (_isAppOpenAdLoading) return;
+    if (!AdConfig.canShowAppOpen || _isAppOpenAdLoading) return;
 
     _isAppOpenAdLoading = true;
     AppOpenAd.load(
@@ -149,13 +151,13 @@ class AdService with WidgetsBindingObserver {
   }
 
   bool get isAppOpenAdAvailable {
-    if (_appOpenAd == null || _appOpenAdLoadTime == null) return false;
+    if (!AdConfig.canShowAppOpen || _appOpenAd == null || _appOpenAdLoadTime == null) return false;
     final isNotExpired = DateTime.now().difference(_appOpenAdLoadTime!) < const Duration(hours: 4);
     return isNotExpired;
   }
 
   void showAppOpenAdIfAvailable({bool force = false}) {
-    if (_isShowingFullScreenAd || _suppressAppOpenOnNextResume) return;
+    if (!AdConfig.canShowAppOpen || _isShowingFullScreenAd || _suppressAppOpenOnNextResume) return;
 
     // Check recent ad dismissal buffer
     if (!force && _lastFullScreenAdDismissedTime != null) {
@@ -217,7 +219,7 @@ class AdService with WidgetsBindingObserver {
   // ===========================================================================
 
   void loadInterstitialAd({VoidCallback? onLoaded}) {
-    if (_isInterstitialAdLoading) return;
+    if (!AdConfig.canShowInterstitial || _isInterstitialAdLoading) return;
 
     _isInterstitialAdLoading = true;
     InterstitialAd.load(
@@ -240,6 +242,10 @@ class AdService with WidgetsBindingObserver {
   }
 
   void recordActionAndCheckInterstitial({VoidCallback? onDismissed}) {
+    if (!AdConfig.canShowInterstitial) {
+      onDismissed?.call();
+      return;
+    }
     _actionCountSinceLastAd++;
     if (_actionCountSinceLastAd >= _actionsRequiredForInterstitial) {
       showInterstitialAd(onDismissed: onDismissed);
@@ -247,6 +253,11 @@ class AdService with WidgetsBindingObserver {
   }
 
   void showInterstitialAd({VoidCallback? onDismissed, bool ignoreCooldown = false}) {
+    if (!AdConfig.canShowInterstitial) {
+      onDismissed?.call();
+      return;
+    }
+
     if (_isShowingFullScreenAd) {
       onDismissed?.call();
       return;
@@ -303,7 +314,7 @@ class AdService with WidgetsBindingObserver {
   // ===========================================================================
 
   void loadRewardedAd({VoidCallback? onLoaded}) {
-    if (_isRewardedAdLoading) return;
+    if (!AdConfig.canShowRewarded || _isRewardedAdLoading) return;
 
     _isRewardedAdLoading = true;
     RewardedAd.load(
@@ -330,6 +341,13 @@ class AdService with WidgetsBindingObserver {
     VoidCallback? onAdClosed,
     VoidCallback? onAdFailed,
   }) {
+    if (!AdConfig.canShowRewarded) {
+      // Ads disabled -> grant reward directly without blocking user
+      onUserEarnedReward(RewardItem(1, 'unlocked_feature'));
+      onAdClosed?.call();
+      return;
+    }
+
     if (_isShowingFullScreenAd) {
       onAdFailed?.call();
       return;
@@ -398,7 +416,7 @@ class AdService with WidgetsBindingObserver {
   // ===========================================================================
 
   void loadRewardedInterstitialAd({VoidCallback? onLoaded}) {
-    if (_isRewardedInterstitialAdLoading) return;
+    if (!AdConfig.canShowRewardedInterstitial || _isRewardedInterstitialAdLoading) return;
 
     _isRewardedInterstitialAdLoading = true;
     RewardedInterstitialAd.load(
@@ -425,6 +443,13 @@ class AdService with WidgetsBindingObserver {
     VoidCallback? onAdClosed,
     VoidCallback? onAdFailed,
   }) {
+    if (!AdConfig.canShowRewardedInterstitial) {
+      // Ads disabled -> grant reward directly without blocking user
+      onUserEarnedReward(RewardItem(1, 'unlocked_feature'));
+      onAdClosed?.call();
+      return;
+    }
+
     if (_isShowingFullScreenAd) {
       onAdFailed?.call();
       return;

@@ -8,6 +8,7 @@ import 'core/providers/language_provider.dart';
 import 'core/services/ad_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/location_service.dart';
+import 'core/services/remote_config_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/tts_service.dart';
 import 'core/theme/app_theme.dart';
@@ -25,6 +26,9 @@ import 'features/splash/screens/spiritual_splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase Remote Config (to fetch latest ad toggles and ad unit IDs)
+  await RemoteConfigService.instance.initialize();
 
   // Initialize Google Mobile Ads SDK (AdMob)
   await AdService.instance.initialize();
