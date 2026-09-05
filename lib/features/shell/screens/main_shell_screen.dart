@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/language_provider.dart';
+import '../../../core/widgets/ad_banner_widget.dart';
 import '../../geeta/screens/chapters_screen.dart';
 import '../../kundali/screens/create_kundali_screen.dart';
 import '../../panchang/screens/panchang_screen.dart';
@@ -60,16 +61,21 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ),
           ],
         ),
-        child: SafeArea(
-          top: false,
-          child: SpiritualBottomNavBar(
-            currentIndex: _currentIndex,
-            onTabSelected: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SpiritualBottomNavBar(
+              currentIndex: _currentIndex,
+              onTabSelected: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+            ),
+            const AdBannerWidget(
+              margin: EdgeInsets.zero,
+            ),
+          ],
         ),
       ),
       floatingActionButton: _currentIndex == 1

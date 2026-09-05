@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-import '../config/ad_config.dart';
 import '../constants/app_colors.dart';
 import '../providers/language_provider.dart';
 import '../services/ad_service.dart';
@@ -38,15 +37,6 @@ class AdRewardDialog extends StatefulWidget {
     bool isRewardedInterstitial = false,
     required VoidCallback onRewardGranted,
   }) {
-    // If ads are disabled in Remote Config, grant reward immediately without popup friction
-    final canShow = isRewardedInterstitial
-        ? AdConfig.canShowRewardedInterstitial
-        : AdConfig.canShowRewarded;
-    if (!canShow) {
-      onRewardGranted();
-      return Future.value();
-    }
-
     return showDialog(
       context: context,
       barrierDismissible: true,

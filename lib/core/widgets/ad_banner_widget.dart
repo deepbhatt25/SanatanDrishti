@@ -28,30 +28,10 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   @override
   void initState() {
     super.initState();
-    AdConfig.adsVisibilityNotifier.addListener(_onVisibilityChanged);
     _loadAd();
   }
 
-  void _onVisibilityChanged() {
-    if (!mounted) return;
-    if (!AdConfig.canShowBanner) {
-      _bannerAd?.dispose();
-      _bannerAd = null;
-      setState(() {
-        _isLoaded = false;
-      });
-    } else if (_bannerAd == null && !_hasFailed) {
-      _loadAd();
-    } else {
-      setState(() {});
-    }
-  }
-
   void _loadAd() {
-    if (!AdConfig.canShowBanner) {
-      return;
-    }
-
     _bannerAd = BannerAd(
       adUnitId: AdConfig.bannerAdUnitId,
       size: widget.adSize,
@@ -83,14 +63,13 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
 
   @override
   void dispose() {
-    AdConfig.adsVisibilityNotifier.removeListener(_onVisibilityChanged);
     _bannerAd?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!AdConfig.canShowBanner || _hasFailed || (!_isLoaded && _bannerAd == null)) {
+    if (_hasFailed || (!_isLoaded && _bannerAd == null)) {
       return const SizedBox.shrink();
     }
 
